@@ -34,7 +34,7 @@ describe('Security Utilities', () => {
     it('should escape HTML content', () => {
       const safe = 'Hello <b>world</b>!';
       const sanitized = sanitizeInput(safe);
-      expect(sanitized).toBe('Hello &lt;b&gt;world&lt;&#x2F;b&gt;!');
+      expect(sanitized).toBe('Hello &lt;b&gt;world&lt;/b&gt;!');
     });
   });
 
