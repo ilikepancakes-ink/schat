@@ -103,7 +103,7 @@ export default function UserList({
 
                 {/* Banned indicator */}
                 {user.is_banned && (
-                  <Ban size={14} className="text-red-500" title="Banned" />
+                  <Ban size={14} className="text-red-500" />
                 )}
               </div>
 

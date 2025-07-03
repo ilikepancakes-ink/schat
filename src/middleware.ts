@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyJWT } from '@/lib/auth';
+import { verifyToken } from '@/lib/auth';
 
 export async function middleware(request: NextRequest) {
   const response = NextResponse.next();
@@ -39,7 +39,7 @@ export async function middleware(request: NextRequest) {
     }
 
     try {
-      const payload = verifyJWT(token);
+      const payload = verifyToken(token);
       if (!payload) {
         return NextResponse.json(
           { success: false, error: 'Invalid token' },
@@ -48,11 +48,11 @@ export async function middleware(request: NextRequest) {
       }
 
       // Add user info to headers for API routes
-      response.headers.set('X-User-ID', payload.userId);
-      response.headers.set('X-User-Admin', payload.isAdmin ? 'true' : 'false');
-      
+      response.headers.set('X-User-ID', payload.id);
+      response.headers.set('X-User-Admin', payload.is_admin ? 'true' : 'false');
+
       // Admin-only routes
-      if (pathname.startsWith('/api/admin/') && !payload.isAdmin) {
+      if (pathname.startsWith('/api/admin/') && !payload.is_admin) {
         return NextResponse.json(
           { success: false, error: 'Admin access required' },
           { status: 403 }
@@ -85,13 +85,7 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public folder
-     */
-    '/((?!_next/static|_next/image|favicon.ico|public/).*)',
+    // Temporarily disable middleware to avoid Edge Runtime issues
+    // '/((?!_next/static|_next/image|favicon.ico|public/).*)',
   ],
 };

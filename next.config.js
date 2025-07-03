@@ -3,8 +3,7 @@ const nextConfig = {
   // Enable React strict mode for better development experience
   reactStrictMode: true,
   
-  // Enable SWC minification for better performance
-  swcMinify: true,
+
   
   // Security headers
   async headers() {
@@ -49,11 +48,8 @@ const nextConfig = {
     formats: ['image/webp', 'image/avif'],
   },
   
-  // Experimental features
-  experimental: {
-    // Enable server components
-    serverComponentsExternalPackages: ['crypto-js'],
-  },
+  // Server external packages (moved from experimental)
+  serverExternalPackages: ['crypto-js', 'jsonwebtoken'],
   
   // Webpack configuration
   webpack: (config, { buildId, dev, isServer, defaultLoaders, webpack }) => {

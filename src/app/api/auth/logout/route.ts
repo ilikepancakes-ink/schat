@@ -12,8 +12,8 @@ export async function POST(request: NextRequest) {
       }, { status: 401 });
     }
 
-    const result = await logoutUser(token);
-    
+    await logoutUser(token);
+
     const response = NextResponse.json({
       success: true,
       message: 'Logout successful',

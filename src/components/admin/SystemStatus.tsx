@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Shield, Lock, Server, Database, AlertCircle, CheckCircle, Clock } from 'lucide-react';
 
-interface SystemStatusProps {}
+// No props needed for SystemStatus component
 
 interface StatusItem {
   name: string;
@@ -12,7 +12,7 @@ interface StatusItem {
   icon: React.ComponentType<{ size?: number; className?: string }>;
 }
 
-export default function SystemStatus({}: SystemStatusProps) {
+export default function SystemStatus() {
   const [systemStatus, setSystemStatus] = useState<StatusItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
