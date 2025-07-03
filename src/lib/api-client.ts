@@ -25,23 +25,34 @@ async function sendDiscordWebhook(message: string): Promise<void> {
 }
 
 /**
- * Enhanced fetch wrapper that handles 401 errors globally
+ * Enhanced fetch wrapper that handles 401 and 403 errors globally
  */
 export async function apiRequest(url: string, options: RequestInit = {}): Promise<Response> {
   try {
     const response = await fetch(url, options);
-    
+
     // Check for 401 unauthorized errors
     if (response.status === 401) {
       const timestamp = new Date().toISOString();
-      const message = `lol 401 error at ${timestamp}`;
-      
+      const message = `lol 401 error at ${timestamp} on path ${url}`;
+
       // Send Discord webhook notification (fire and forget)
       sendDiscordWebhook(message).catch(() => {
         // Silently fail if webhook fails
       });
     }
-    
+
+    // Check for 403 forbidden errors
+    if (response.status === 403) {
+      const timestamp = new Date().toISOString();
+      const message = `lol 403 error at ${timestamp} on path ${url}`;
+
+      // Send Discord webhook notification (fire and forget)
+      sendDiscordWebhook(message).catch(() => {
+        // Silently fail if webhook fails
+      });
+    }
+
     return response;
   } catch (error) {
     // Re-throw the original error
