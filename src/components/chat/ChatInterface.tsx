@@ -8,6 +8,8 @@ import ChatMessage from './ChatMessage';
 import MessageInput from './MessageInput';
 import UserList from './UserList';
 import AdminPanel from '../admin/AdminPanel';
+import UserProfile from '../profile/UserProfile';
+import { UserProfile as UserProfileType } from '@/types/database';
 
 export default function ChatInterface() {
   const { user } = useAuth();
@@ -18,6 +20,7 @@ export default function ChatInterface() {
   const [showAdminPanel, setShowAdminPanel] = useState(false);
   const [error, setError] = useState('');
   const [lastMessageTime, setLastMessageTime] = useState<string>('');
+  const [selectedProfile, setSelectedProfile] = useState<UserProfileType | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Scroll to bottom of messages
@@ -194,6 +197,106 @@ export default function ChatInterface() {
     }
   };
 
+  const handleUserClick = async (userId: string) => {
+    try {
+      const response = await fetch(`/api/profile/${userId}`, {
+        credentials: 'include',
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          setSelectedProfile(data.profile);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+    }
+  };
+
+  const handleSendMessage = (userId: string) => {
+    // TODO: Implement private messaging
+    console.log('Send message to:', userId);
+    setSelectedProfile(null);
+  };
+
+  const handleAddFriend = async (userId: string) => {
+    try {
+      const response = await fetch('/api/friends', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          action: 'send_request',
+          friendId: userId,
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          // Refresh profile to update friend status
+          await handleUserClick(userId);
+        }
+      }
+    } catch (error) {
+      console.error('Error adding friend:', error);
+    }
+  };
+
+  const handleRemoveFriend = async (userId: string) => {
+    try {
+      const response = await fetch('/api/friends', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          action: 'remove_friend',
+          friendId: userId,
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          // Refresh profile to update friend status
+          await handleUserClick(userId);
+        }
+      }
+    } catch (error) {
+      console.error('Error removing friend:', error);
+    }
+  };
+
+  const handleUpdateProfile = async (updates: Partial<UserProfileType>) => {
+    if (!user || !selectedProfile) return;
+
+    try {
+      const response = await fetch(`/api/profile/${selectedProfile.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify(updates),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          // Update the selected profile with new data
+          setSelectedProfile(prev => prev ? { ...prev, ...updates } : null);
+        }
+      }
+    } catch (error) {
+      console.error('Error updating profile:', error);
+    }
+  };
+
   if (loading) {
     return (
       <div className="h-screen flex items-center justify-center bg-gray-50">
@@ -246,6 +349,7 @@ export default function ChatInterface() {
                   key={message.id}
                   message={message}
                   onDeleteMessage={user?.is_admin ? deleteMessage : undefined}
+                  onUserClick={handleUserClick}
                 />
               ))
             )}
@@ -276,6 +380,17 @@ export default function ChatInterface() {
         <AdminPanel
           onClose={() => setShowAdminPanel(false)}
           onRefreshUsers={loadUsers}
+        />
+      )}
+
+      {selectedProfile && (
+        <UserProfile
+          profile={selectedProfile}
+          onClose={() => setSelectedProfile(null)}
+          onSendMessage={handleSendMessage}
+          onAddFriend={handleAddFriend}
+          onRemoveFriend={handleRemoveFriend}
+          onUpdateProfile={handleUpdateProfile}
         />
       )}
     </div>

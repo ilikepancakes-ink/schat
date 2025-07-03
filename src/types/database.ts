@@ -4,6 +4,9 @@ export interface User {
   password_hash: string;
   is_admin: boolean;
   is_banned: boolean;
+  profile_picture_url?: string;
+  bio?: string;
+  display_name?: string;
   created_at: string;
   updated_at: string;
 }
@@ -43,6 +46,8 @@ export interface ChatUser {
   is_admin: boolean;
   is_banned: boolean;
   is_online: boolean;
+  profile_picture_url?: string;
+  display_name?: string;
 }
 
 export interface ChatMessage {
@@ -60,6 +65,40 @@ export interface AuthUser {
   username: string;
   is_admin: boolean;
   is_banned: boolean;
+  profile_picture_url?: string;
+  display_name?: string;
+}
+
+export interface Friend {
+  id: string;
+  user_id: string;
+  friend_id: string;
+  status: 'pending' | 'accepted' | 'blocked';
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PrivateMessage {
+  id: string;
+  sender_id: string;
+  recipient_id: string;
+  content: string;
+  created_at: string;
+  updated_at: string;
+  is_read: boolean;
+  is_deleted: boolean;
+}
+
+export interface UserProfile {
+  id: string;
+  username: string;
+  display_name?: string;
+  bio?: string;
+  profile_picture_url?: string;
+  is_admin: boolean;
+  is_online: boolean;
+  created_at: string;
+  friend_status?: 'none' | 'pending_sent' | 'pending_received' | 'accepted' | 'blocked';
 }
 
 export type UserRole = 'user' | 'admin';

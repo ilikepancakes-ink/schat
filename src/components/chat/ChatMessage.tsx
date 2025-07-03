@@ -8,9 +8,10 @@ import { Trash2, Shield } from 'lucide-react';
 interface ChatMessageProps {
   message: ChatMessageType;
   onDeleteMessage?: (messageId: string) => void;
+  onUserClick?: (userId: string) => void;
 }
 
-export default function ChatMessage({ message, onDeleteMessage }: ChatMessageProps) {
+export default function ChatMessage({ message, onDeleteMessage, onUserClick }: ChatMessageProps) {
   const { user } = useAuth();
   const isOwnMessage = user?.id === message.user_id;
   const canDelete = user?.is_admin && !message.is_deleted;
@@ -36,9 +37,12 @@ export default function ChatMessage({ message, onDeleteMessage }: ChatMessagePro
         {/* Message header */}
         <div className={`flex items-center mb-1 ${isOwnMessage ? 'justify-end' : 'justify-start'}`}>
           <div className="flex items-center space-x-2">
-            <span className="text-sm font-medium text-gray-700">
+            <button
+              onClick={() => onUserClick?.(message.user_id)}
+              className="text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors cursor-pointer"
+            >
               {message.username}
-            </span>
+            </button>
             {message.is_admin && (
               <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                 <Shield size={12} className="mr-1" />
