@@ -38,7 +38,10 @@ export default function ChatMessage({ message, onDeleteMessage, onUserClick }: C
         <div className={`flex items-center mb-1 ${isOwnMessage ? 'justify-end' : 'justify-start'}`}>
           <div className="flex items-center space-x-2">
             <button
-              onClick={() => onUserClick?.(message.user_id)}
+              onClick={() => {
+                console.log('Username clicked:', message.username, 'User ID:', message.user_id);
+                onUserClick?.(message.user_id);
+              }}
               className="text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors cursor-pointer"
             >
               {message.username}

@@ -198,16 +198,25 @@ export default function ChatInterface() {
   };
 
   const handleUserClick = async (userId: string) => {
+    console.log('handleUserClick called with userId:', userId);
     try {
       const response = await fetch(`/api/profile/${userId}`, {
         credentials: 'include',
       });
 
+      console.log('Profile API response status:', response.status);
+
       if (response.ok) {
         const data = await response.json();
+        console.log('Profile API response data:', data);
         if (data.success) {
           setSelectedProfile(data.profile);
+          console.log('Profile set:', data.profile);
+        } else {
+          console.error('Profile API returned error:', data.error);
         }
+      } else {
+        console.error('Profile API request failed with status:', response.status);
       }
     } catch (error) {
       console.error('Error fetching profile:', error);
