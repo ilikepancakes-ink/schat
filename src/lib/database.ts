@@ -128,14 +128,7 @@ export async function sendMessage(userId: string, content: string): Promise<{ su
         user_id: userId,
         content: encryptedContent,
       })
-      .select(`
-        id,
-        content,
-        created_at,
-        is_deleted,
-        user_id,
-        users!inner(username, is_admin)
-      `)
+      .select('id, content, created_at, is_deleted, user_id')
       .single();
 
     if (error) {
@@ -143,13 +136,25 @@ export async function sendMessage(userId: string, content: string): Promise<{ su
       return { success: false, error: 'Failed to send message' };
     }
 
+    // Get user information separately to avoid join issues
+    const { data: user, error: userError } = await supabaseAdmin
+      .from('users')
+      .select('username, is_admin')
+      .eq('id', userId)
+      .single();
+
+    if (userError) {
+      console.error('Error fetching user for message:', userError);
+      return { success: false, error: 'Failed to fetch user information' };
+    }
+
     const chatMessage: ChatMessage = {
       id: message.id,
       user_id: message.user_id,
-      username: (message.users as any).username,
+      username: user.username,
       content: content.trim(),
       created_at: message.created_at,
-      is_admin: (message.users as any).is_admin,
+      is_admin: user.is_admin,
       is_deleted: false,
     };
 
