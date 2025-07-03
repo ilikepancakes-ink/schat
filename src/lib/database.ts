@@ -37,28 +37,54 @@ export async function getAllUsers(): Promise<{ success: boolean; users?: ChatUse
  */
 export async function getAllMessages(limit: number = 100): Promise<{ success: boolean; messages?: ChatMessage[]; error?: string }> {
   try {
+    // First, let's try a simpler query to debug
+    console.log('Fetching messages with limit:', limit);
+
     const { data: messages, error } = await supabaseAdmin
       .from('messages')
-      .select(`
-        id,
-        content,
-        created_at,
-        is_deleted,
-        user_id,
-        users!inner(username, is_admin)
-      `)
+      .select('id, content, created_at, is_deleted, user_id')
       .order('created_at', { ascending: false })
       .limit(limit);
 
     if (error) {
       console.error('Error fetching messages:', error);
-      return { success: false, error: 'Failed to fetch messages' };
+      return { success: false, error: `Database error: ${error.message}` };
     }
 
+    console.log('Raw messages from database:', messages?.length || 0);
+
+    if (!messages || messages.length === 0) {
+      return { success: true, messages: [] };
+    }
+
+    // Get user information separately to avoid join issues
+    const userIds = [...new Set(messages.map(m => m.user_id))];
+    const { data: users, error: userError } = await supabaseAdmin
+      .from('users')
+      .select('id, username, is_admin')
+      .in('id', userIds);
+
+    if (userError) {
+      console.error('Error fetching users:', userError);
+      return { success: false, error: `User fetch error: ${userError.message}` };
+    }
+
+    // Create a user lookup map
+    const userMap = new Map();
+    users?.forEach(user => {
+      userMap.set(user.id, user);
+    });
+
     const chatMessages: ChatMessage[] = messages.map(message => {
+      const user = userMap.get(message.user_id);
       let decryptedContent = '';
+
       try {
-        decryptedContent = message.is_deleted ? '[Message deleted]' : decryptMessage(message.content);
+        if (message.is_deleted) {
+          decryptedContent = '[Message deleted]';
+        } else {
+          decryptedContent = decryptMessage(message.content);
+        }
       } catch (error) {
         console.error('Error decrypting message:', error);
         decryptedContent = '[Error decrypting message]';
@@ -67,18 +93,19 @@ export async function getAllMessages(limit: number = 100): Promise<{ success: bo
       return {
         id: message.id,
         user_id: message.user_id,
-        username: (message.users as any).username,
+        username: user?.username || 'Unknown User',
         content: decryptedContent,
         created_at: message.created_at,
-        is_admin: (message.users as any).is_admin,
+        is_admin: user?.is_admin || false,
         is_deleted: message.is_deleted,
       };
     }).reverse(); // Reverse to show oldest first
 
+    console.log('Processed messages:', chatMessages.length);
     return { success: true, messages: chatMessages };
   } catch (error) {
     console.error('Error in getAllMessages:', error);
-    return { success: false, error: 'Failed to fetch messages' };
+    return { success: false, error: `Internal error: ${error instanceof Error ? error.message : 'Unknown error'}` };
   }
 }
 
