@@ -47,6 +47,7 @@ export function validateRegistrationData(data: any): ValidationResult {
     sanitized: {
       username: sanitizeInput(username.trim()),
       password: password, // Don't sanitize password as it may contain special chars
+      confirmPassword: confirmPassword, // Include confirmPassword for registerUser function
     },
   };
 }
