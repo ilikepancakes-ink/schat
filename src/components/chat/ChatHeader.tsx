@@ -73,7 +73,10 @@ export default function ChatHeader({ onToggleUserList, showUserList, onOpenAdmin
                     </span>
                   )}
                 </div>
-                <div className="text-xs text-gray-500">Online</div>
+                <div className="text-xs text-gray-500 flex items-center">
+                  <div className="w-2 h-2 bg-green-500 rounded-full mr-1 animate-pulse"></div>
+                  Online
+                </div>
               </div>
               
               {/* Avatar */}

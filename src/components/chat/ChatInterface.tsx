@@ -17,6 +17,7 @@ export default function ChatInterface() {
   const [showUserList, setShowUserList] = useState(true);
   const [showAdminPanel, setShowAdminPanel] = useState(false);
   const [error, setError] = useState('');
+  const [lastMessageTime, setLastMessageTime] = useState<string>('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Scroll to bottom of messages
@@ -30,6 +31,15 @@ export default function ChatInterface() {
     loadUsers();
   }, []);
 
+  // Real-time polling for new messages
+  useEffect(() => {
+    const interval = setInterval(() => {
+      loadMessages();
+    }, 2000); // Poll every 2 seconds
+
+    return () => clearInterval(interval);
+  }, []);
+
   // Scroll to bottom when messages change
   useEffect(() => {
     scrollToBottom();
@@ -40,11 +50,20 @@ export default function ChatInterface() {
       const response = await fetch('/api/messages', {
         credentials: 'include',
       });
-      
+
       if (response.ok) {
         const data = await response.json();
         if (data.success) {
-          setMessages(data.messages || []);
+          const newMessages = data.messages || [];
+
+          // Only update if there are new messages
+          if (newMessages.length > 0) {
+            const latestMessageTime = newMessages[newMessages.length - 1]?.created_at;
+            if (latestMessageTime !== lastMessageTime) {
+              setMessages(newMessages);
+              setLastMessageTime(latestMessageTime);
+            }
+          }
         } else {
           setError(data.error || 'Failed to load messages');
         }
