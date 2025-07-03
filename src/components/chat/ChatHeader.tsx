@@ -110,6 +110,15 @@ export default function ChatHeader({ onToggleUserList, showUserList, onOpenAdmin
                   </div>
                   
                   <div className="p-1">
+                    {user?.is_admin && (
+                      <a
+                        href="/admin/dashboard"
+                        className="w-full flex items-center px-3 py-2 text-sm text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+                      >
+                        <Shield size={16} className="mr-2" />
+                        Admin Dashboard
+                      </a>
+                    )}
                     <button
                       onClick={handleLogout}
                       className="w-full flex items-center px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-md transition-colors"
