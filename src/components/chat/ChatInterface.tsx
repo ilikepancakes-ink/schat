@@ -13,6 +13,7 @@ import { UserProfile as UserProfileType } from '@/types/database';
 
 export default function ChatInterface() {
   const { user } = useAuth();
+  console.log('Current user in ChatInterface:', user);
   const [messages, setMessages] = useState<ChatMessageType[]>([]);
   const [users, setUsers] = useState<ChatUser[]>([]);
   const [loading, setLoading] = useState(true);
