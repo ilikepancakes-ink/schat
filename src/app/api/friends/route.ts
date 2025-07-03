@@ -31,9 +31,7 @@ export async function GET(request: NextRequest) {
         user_id,
         friend_id,
         status,
-        created_at,
-        users!friends_friend_id_fkey(id, username, display_name, profile_picture_url, is_admin),
-        users!friends_user_id_fkey(id, username, display_name, profile_picture_url, is_admin)
+        created_at
       `)
       .or(`user_id.eq.${userId},friend_id.eq.${userId}`)
       .order('created_at', { ascending: false });
@@ -46,27 +44,37 @@ export async function GET(request: NextRequest) {
       }, { status: 500 });
     }
 
-    // Process the data to get friend information
-    const friends = friendsData?.map(friendship => {
-      const isUserInitiator = friendship.user_id === userId;
-      const friendData = isUserInitiator 
-        ? friendship.users!friends_friend_id_fkey 
-        : friendship.users!friends_user_id_fkey;
+    // Get friend user data separately
+    const friends = [];
+    if (friendsData) {
+      for (const friendship of friendsData) {
+        const isUserInitiator = friendship.user_id === userId;
+        const friendUserId = isUserInitiator ? friendship.friend_id : friendship.user_id;
 
-      return {
-        id: friendship.id,
-        friend: {
-          id: friendData.id,
-          username: friendData.username,
-          display_name: friendData.display_name,
-          profile_picture_url: friendData.profile_picture_url,
-          is_admin: friendData.is_admin,
-        },
-        status: friendship.status,
-        created_at: friendship.created_at,
-        is_initiator: isUserInitiator,
-      };
-    }) || [];
+        // Get friend user data
+        const { data: friendUser } = await supabaseAdmin
+          .from('users')
+          .select('id, username, display_name, profile_picture_url, is_admin')
+          .eq('id', friendUserId)
+          .single();
+
+        if (friendUser) {
+          friends.push({
+            id: friendship.id,
+            friend: {
+              id: friendUser.id,
+              username: friendUser.username,
+              display_name: friendUser.display_name,
+              profile_picture_url: friendUser.profile_picture_url,
+              is_admin: friendUser.is_admin,
+            },
+            status: friendship.status,
+            created_at: friendship.created_at,
+            is_initiator: isUserInitiator,
+          });
+        }
+      }
+    }
 
     return NextResponse.json({
       success: true,

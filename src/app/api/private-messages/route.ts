@@ -48,9 +48,7 @@ export async function GET(request: NextRequest) {
         content,
         created_at,
         is_read,
-        is_deleted,
-        sender:users!private_messages_sender_id_fkey(username, display_name, profile_picture_url),
-        recipient:users!private_messages_recipient_id_fkey(username, display_name, profile_picture_url)
+        is_deleted
       `)
       .or(`and(sender_id.eq.${currentUserId},recipient_id.eq.${otherUserId}),and(sender_id.eq.${otherUserId},recipient_id.eq.${currentUserId})`)
       .eq('is_deleted', false)
@@ -65,18 +63,32 @@ export async function GET(request: NextRequest) {
       }, { status: 500 });
     }
 
-    // Decrypt messages
-    const decryptedMessages = messages?.map(message => ({
-      id: message.id,
-      sender_id: message.sender_id,
-      recipient_id: message.recipient_id,
-      content: decryptMessage(message.content),
-      created_at: message.created_at,
-      is_read: message.is_read,
-      sender_username: message.sender.username,
-      sender_display_name: message.sender.display_name,
-      sender_profile_picture: message.sender.profile_picture_url,
-    })) || [];
+    // Get sender data and decrypt messages
+    const decryptedMessages = [];
+    if (messages) {
+      for (const message of messages) {
+        // Get sender user data
+        const { data: senderUser } = await supabaseAdmin
+          .from('users')
+          .select('username, display_name, profile_picture_url')
+          .eq('id', message.sender_id)
+          .single();
+
+        if (senderUser) {
+          decryptedMessages.push({
+            id: message.id,
+            sender_id: message.sender_id,
+            recipient_id: message.recipient_id,
+            content: decryptMessage(message.content),
+            created_at: message.created_at,
+            is_read: message.is_read,
+            sender_username: senderUser.username,
+            sender_display_name: senderUser.display_name,
+            sender_profile_picture: senderUser.profile_picture_url,
+          });
+        }
+      }
+    }
 
     // Mark messages as read if current user is the recipient
     if (decryptedMessages.length > 0) {
@@ -199,8 +211,7 @@ export async function POST(request: NextRequest) {
         recipient_id,
         content,
         created_at,
-        is_read,
-        sender:users!private_messages_sender_id_fkey(username, display_name, profile_picture_url)
+        is_read
       `)
       .single();
 
@@ -212,6 +223,13 @@ export async function POST(request: NextRequest) {
       }, { status: 500 });
     }
 
+    // Get sender user data
+    const { data: senderUser } = await supabaseAdmin
+      .from('users')
+      .select('username, display_name, profile_picture_url')
+      .eq('id', senderId)
+      .single();
+
     // Return decrypted message
     const responseMessage = {
       id: newMessage.id,
@@ -220,9 +238,9 @@ export async function POST(request: NextRequest) {
       content: decryptMessage(newMessage.content),
       created_at: newMessage.created_at,
       is_read: newMessage.is_read,
-      sender_username: newMessage.sender.username,
-      sender_display_name: newMessage.sender.display_name,
-      sender_profile_picture: newMessage.sender.profile_picture_url,
+      sender_username: senderUser?.username || '',
+      sender_display_name: senderUser?.display_name || '',
+      sender_profile_picture: senderUser?.profile_picture_url || '',
     };
 
     return NextResponse.json({

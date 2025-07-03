@@ -5,7 +5,7 @@ import { UserProfile } from '@/types/database';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { userId: string } }
+  { params }: { params: Promise<{ userId: string }> }
 ) {
   try {
     const token = request.cookies.get('auth-token')?.value;
@@ -25,7 +25,7 @@ export async function GET(
       }, { status: 401 });
     }
 
-    const { userId } = params;
+    const { userId } = await params;
     const currentUserId = authResult.user.id;
 
     // Get user profile
@@ -96,7 +96,7 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { userId: string } }
+  { params }: { params: Promise<{ userId: string }> }
 ) {
   try {
     const token = request.cookies.get('auth-token')?.value;
@@ -116,7 +116,7 @@ export async function PUT(
       }, { status: 401 });
     }
 
-    const { userId } = params;
+    const { userId } = await params;
     const currentUserId = authResult.user.id;
 
     // Users can only update their own profile
