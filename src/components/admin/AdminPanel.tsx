@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { ChatUser } from '@/types/database';
+import { apiClient } from '@/lib/api-client';
 import { X, Shield, Users, Activity, AlertTriangle } from 'lucide-react';
 import UserManagement from './UserManagement';
 import SystemStatus from './SystemStatus';
@@ -28,7 +29,7 @@ export default function AdminPanel({ onClose, onRefreshUsers }: AdminPanelProps)
 
   const loadUsers = async () => {
     try {
-      const response = await fetch('/api/admin/users', {
+      const response = await apiClient.get('/api/admin/users', {
         credentials: 'include',
       });
       
@@ -47,14 +48,10 @@ export default function AdminPanel({ onClose, onRefreshUsers }: AdminPanelProps)
 
   const handleUserAction = async (action: string, userId: string, reason?: string) => {
     try {
-      const response = await fetch('/api/admin/users', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({ action, userId, reason }),
-      });
+      const response = await apiClient.post('/api/admin/users',
+        { action, userId, reason },
+        { credentials: 'include' }
+      );
 
       if (response.ok) {
         const data = await response.json();

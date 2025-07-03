@@ -10,6 +10,7 @@ import UserList from './UserList';
 import AdminPanel from '../admin/AdminPanel';
 import UserProfile from '../profile/UserProfile';
 import { UserProfile as UserProfileType } from '@/types/database';
+import { apiClient } from '@/lib/api-client';
 
 export default function ChatInterface() {
   const { user } = useAuth();
@@ -51,7 +52,7 @@ export default function ChatInterface() {
 
   const loadMessages = async () => {
     try {
-      const response = await fetch('/api/messages', {
+      const response = await apiClient.get('/api/messages', {
         credentials: 'include',
       });
 
@@ -84,12 +85,12 @@ export default function ChatInterface() {
 
   const loadUsers = async () => {
     if (!user?.is_admin) return;
-    
+
     try {
-      const response = await fetch('/api/admin/users', {
+      const response = await apiClient.get('/api/admin/users', {
         credentials: 'include',
       });
-      
+
       if (response.ok) {
         const data = await response.json();
         if (data.success) {
@@ -103,14 +104,10 @@ export default function ChatInterface() {
 
   const sendMessage = async (content: string) => {
     try {
-      const response = await fetch('/api/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({ content }),
-      });
+      const response = await apiClient.post('/api/messages',
+        { content },
+        { credentials: 'include' }
+      );
 
       if (response.ok) {
         const data = await response.json();
@@ -135,8 +132,7 @@ export default function ChatInterface() {
     if (reason === null) return;
 
     try {
-      const response = await fetch('/api/admin/messages', {
-        method: 'DELETE',
+      const response = await apiClient.delete('/api/admin/messages', {
         headers: {
           'Content-Type': 'application/json',
         },
@@ -171,14 +167,10 @@ export default function ChatInterface() {
     if (!user?.is_admin) return;
 
     try {
-      const response = await fetch('/api/admin/users', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({ action, userId }),
-      });
+      const response = await apiClient.post('/api/admin/users',
+        { action, userId },
+        { credentials: 'include' }
+      );
 
       if (response.ok) {
         const data = await response.json();
@@ -201,7 +193,7 @@ export default function ChatInterface() {
   const handleUserClick = async (userId: string) => {
     console.log('handleUserClick called with userId:', userId);
     try {
-      const response = await fetch(`/api/profile/${userId}`, {
+      const response = await apiClient.get(`/api/profile/${userId}`, {
         credentials: 'include',
       });
 
@@ -232,16 +224,11 @@ export default function ChatInterface() {
 
   const handleAddFriend = async (userId: string) => {
     try {
-      const response = await fetch('/api/friends', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+      const response = await apiClient.post('/api/friends', {
+        action: 'send_request',
+        friendId: userId,
+      }, {
         credentials: 'include',
-        body: JSON.stringify({
-          action: 'send_request',
-          friendId: userId,
-        }),
       });
 
       if (response.ok) {
@@ -258,16 +245,11 @@ export default function ChatInterface() {
 
   const handleRemoveFriend = async (userId: string) => {
     try {
-      const response = await fetch('/api/friends', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+      const response = await apiClient.post('/api/friends', {
+        action: 'remove_friend',
+        friendId: userId,
+      }, {
         credentials: 'include',
-        body: JSON.stringify({
-          action: 'remove_friend',
-          friendId: userId,
-        }),
       });
 
       if (response.ok) {
@@ -286,14 +268,10 @@ export default function ChatInterface() {
     if (!user || !selectedProfile) return;
 
     try {
-      const response = await fetch(`/api/profile/${selectedProfile.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify(updates),
-      });
+      const response = await apiClient.put(`/api/profile/${selectedProfile.id}`,
+        updates,
+        { credentials: 'include' }
+      );
 
       if (response.ok) {
         const data = await response.json();

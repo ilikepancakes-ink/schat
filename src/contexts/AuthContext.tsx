@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { AuthUser } from '@/types/database';
+import { apiClient } from '@/lib/api-client';
 
 interface AuthContextType {
   user: AuthUser | null;
@@ -28,10 +29,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const checkAuth = async () => {
     try {
-      const response = await fetch('/api/auth/me', {
+      const response = await apiClient.get('/api/auth/me', {
         credentials: 'include',
       });
-      
+
       if (response.ok) {
         const data = await response.json();
         if (data.success && data.user) {
@@ -52,14 +53,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (username: string, password: string): Promise<{ success: boolean; error?: string }> => {
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({ username, password }),
-      });
+      const response = await apiClient.post('/api/auth/login',
+        { username, password },
+        { credentials: 'include' }
+      );
 
       const data = await response.json();
 
@@ -77,12 +74,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const register = async (username: string, password: string, confirmPassword: string): Promise<{ success: boolean; error?: string }> => {
     try {
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ username, password, confirmPassword }),
+      const response = await apiClient.post('/api/auth/register', {
+        username,
+        password,
+        confirmPassword
       });
 
       const data = await response.json();
@@ -100,8 +95,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = async () => {
     try {
-      await fetch('/api/auth/logout', {
-        method: 'POST',
+      await apiClient.post('/api/auth/logout', undefined, {
         credentials: 'include',
       });
     } catch (error) {
