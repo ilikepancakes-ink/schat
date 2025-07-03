@@ -60,8 +60,8 @@ export async function registerUser(credentials: RegisterCredentials): Promise<{ 
       return { success: false, error: 'Username must be between 3 and 50 characters' };
     }
 
-    if (password.length < 6) {
-      return { success: false, error: 'Password must be at least 6 characters long' };
+    if (password.length < 8) {
+      return { success: false, error: 'Password must be at least 8 characters long' };
     }
 
     // Check if username already exists

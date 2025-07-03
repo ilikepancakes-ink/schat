@@ -19,10 +19,13 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
+    console.log('Registration request body:', body);
 
     // Validate and sanitize input
     const validation = validateRegistrationData(body);
+    console.log('Validation result:', validation);
     if (!validation.valid) {
+      console.log('Validation failed:', validation.error);
       return NextResponse.json({
         success: false,
         error: validation.error,
