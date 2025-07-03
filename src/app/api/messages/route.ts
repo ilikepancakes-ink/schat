@@ -33,8 +33,8 @@ export async function GET(request: NextRequest) {
 
     // Validate pagination parameters
     const url = new URL(request.url);
-    const page = url.searchParams.get('page');
-    const limit = url.searchParams.get('limit');
+    const page = url.searchParams.get('page') || '1';
+    const limit = url.searchParams.get('limit') || '50';
 
     const paginationValidation = validatePagination({ page, limit });
     if (!paginationValidation.valid) {
@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
       }, { status: 400 });
     }
 
-    const result = await getAllMessages(paginationValidation.sanitized);
+    const result = await getAllMessages(paginationValidation.sanitized.limit);
 
     if (result.success) {
       return NextResponse.json({
