@@ -107,7 +107,9 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { name, description, is_staff_only } = body;
 
-    console.log('Creating chatroom with data:', { name, description, is_staff_only, userId: authResult.user.id });
+    const userId = authResult.user.id;
+
+    console.log('Creating chatroom with data:', { name, description, is_staff_only, userId });
 
     // Test database connection
     const { data: testData, error: testError } = await supabaseAdmin
@@ -139,8 +141,6 @@ export async function POST(request: NextRequest) {
         error: 'Chatroom name must be 100 characters or less',
       }, { status: 400 });
     }
-
-    const userId = authResult.user.id;
 
     // Generate a unique invite code
     const inviteCode = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
