@@ -253,8 +253,62 @@ export default function ChatInterface() {
     }
   };
 
+  const handleCommand = async (command: { type: string; args?: string[] }) => {
+    try {
+      if (command.type === 'invitelink') {
+        if (!selectedChatroomId) {
+          alert('Invite links can only be generated in chatrooms');
+          return;
+        }
+
+        const response = await apiClient.get(`/api/chatrooms/${selectedChatroomId}/invite-link`, {
+          credentials: 'include'
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success) {
+            // Copy to clipboard and show success message
+            await navigator.clipboard.writeText(data.inviteLink);
+            alert(`Invite link copied to clipboard!\n\nChatroom: ${data.chatroomName}\nLink: ${data.inviteLink}`);
+          } else {
+            alert(data.error || 'Failed to generate invite link');
+          }
+        } else {
+          alert('Failed to generate invite link');
+        }
+      } else if (command.type === 'privateshare') {
+        if (!selectedChatroomId || !command.args?.[0]) {
+          alert('Private sharing requires a chatroom and username');
+          return;
+        }
+
+        const response = await apiClient.post(`/api/chatrooms/${selectedChatroomId}/private-share`, {
+          username: command.args[0]
+        }, {
+          credentials: 'include'
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success) {
+            alert(`Private invite sent to ${command.args[0]}!`);
+          } else {
+            alert(data.error || 'Failed to send private invite');
+          }
+        } else {
+          alert('Failed to send private invite');
+        }
+      }
+    } catch (error) {
+      console.error('Error handling command:', error);
+      alert('Failed to execute command');
+    }
+  };
+
   const handleUserClick = async (userId: string) => {
     console.log('handleUserClick called with userId:', userId);
+    console.log('Current selectedProfile state:', selectedProfile);
     try {
       const response = await apiClient.get(`/api/profile/${userId}`, {
         credentials: 'include',
@@ -266,13 +320,16 @@ export default function ChatInterface() {
         const data = await response.json();
         console.log('Profile API response data:', data);
         if (data.success) {
+          console.log('Setting selectedProfile to:', data.profile);
           setSelectedProfile(data.profile);
-          console.log('Profile set:', data.profile);
+          console.log('Profile set successfully');
         } else {
           console.error('Profile API returned error:', data.error);
         }
       } else {
         console.error('Profile API request failed with status:', response.status);
+        const errorText = await response.text();
+        console.error('Error response body:', errorText);
       }
     } catch (error) {
       console.error('Error fetching profile:', error);
@@ -457,6 +514,8 @@ export default function ChatInterface() {
           {/* Message input */}
           <MessageInput
             onSendMessage={sendMessage}
+            onCommand={handleCommand}
+            currentChatroomId={selectedChatroomId}
             disabled={user?.is_banned}
           />
         </div>
@@ -483,14 +542,17 @@ export default function ChatInterface() {
       )}
 
       {selectedProfile && (
-        <UserProfile
-          profile={selectedProfile}
-          onClose={() => setSelectedProfile(null)}
-          onSendMessage={handleSendMessage}
-          onAddFriend={handleAddFriend}
-          onRemoveFriend={handleRemoveFriend}
-          onUpdateProfile={handleUpdateProfile}
-        />
+        <>
+          {console.log('Rendering UserProfile with profile:', selectedProfile)}
+          <UserProfile
+            profile={selectedProfile}
+            onClose={() => setSelectedProfile(null)}
+            onSendMessage={handleSendMessage}
+            onAddFriend={handleAddFriend}
+            onRemoveFriend={handleRemoveFriend}
+            onUpdateProfile={handleUpdateProfile}
+          />
+        </>
       )}
 
       {/* Invite Notifications */}
