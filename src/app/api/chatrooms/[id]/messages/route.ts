@@ -73,7 +73,7 @@ export async function GET(
         updated_at,
         is_deleted,
         deleted_by,
-        users!chatroom_messages_user_id_fkey(username, display_name, profile_picture_url, is_admin)
+        users!chatroom_messages_user_id_fkey(username, profile_picture_url, is_admin)
       `)
       .eq('chatroom_id', chatroomId)
       .eq('is_deleted', false)
@@ -105,7 +105,7 @@ export async function GET(
           is_deleted: message.is_deleted,
           deleted_by: message.deleted_by,
           username: (message.users as any).username,
-          display_name: (message.users as any).display_name,
+          display_name: (message.users as any).username, // Use username as fallback for display_name
           profile_picture_url: (message.users as any).profile_picture_url,
           is_admin: (message.users as any).is_admin,
         };
@@ -121,7 +121,7 @@ export async function GET(
           is_deleted: message.is_deleted,
           deleted_by: message.deleted_by,
           username: (message.users as any).username,
-          display_name: (message.users as any).display_name,
+          display_name: (message.users as any).username, // Use username as fallback for display_name
           profile_picture_url: (message.users as any).profile_picture_url,
           is_admin: (message.users as any).is_admin,
         };
