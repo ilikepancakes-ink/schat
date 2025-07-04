@@ -100,17 +100,19 @@ export default function ChatInterface() {
   };
 
   const loadUsers = async () => {
-    if (!user?.is_admin) return;
-
     try {
-      const response = await apiClient.get('/api/admin/users', {
+      console.log('🔍 Loading users for user list...');
+      const response = await apiClient.get('/api/users', {
         credentials: 'include',
       });
 
+      console.log('🔍 Users API response status:', response.status);
       if (response.ok) {
         const data = await response.json();
+        console.log('🔍 Users API response data:', data);
         if (data.success) {
           setUsers(data.users || []);
+          console.log('✅ Users loaded successfully:', data.users?.length || 0);
         }
       }
     } catch (error) {

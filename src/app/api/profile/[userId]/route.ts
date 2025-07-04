@@ -10,9 +10,11 @@ export async function GET(
   { params }: { params: Promise<{ userId: string }> }
 ) {
   try {
+    console.log('🔍 Profile API called');
     const token = request.cookies.get('auth-token')?.value;
-    
+
     if (!token) {
+      console.log('❌ No auth token found');
       return NextResponse.json({
         success: false,
         error: 'Authentication required',
@@ -21,6 +23,7 @@ export async function GET(
 
     const authResult = await validateSession(token);
     if (!authResult.valid || !authResult.user) {
+      console.log('❌ Invalid session');
       return NextResponse.json({
         success: false,
         error: 'Invalid session',
@@ -29,15 +32,21 @@ export async function GET(
 
     const { userId } = await params;
     const currentUserId = authResult.user.id;
+    console.log('🔍 Looking up profile for userId:', userId);
+    console.log('🔍 Current user ID:', currentUserId);
 
     // Get user profile
+    console.log('📡 Querying database for user profile...');
     const { data: userProfile, error: userError } = await supabaseAdmin
       .from('users')
       .select('id, username, display_name, bio, profile_picture_url, is_admin, created_at')
       .eq('id', userId)
       .single();
 
+    console.log('📡 Database query result:', { userProfile, userError });
+
     if (userError || !userProfile) {
+      console.log('❌ User not found in database');
       return NextResponse.json({
         success: false,
         error: 'User not found',
