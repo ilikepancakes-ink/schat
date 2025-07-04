@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 
 interface ChatroomSidebarProps {
-  selectedChatroomId?: string;
+  selectedChatroomId?: string | null;
   onSelectChatroom: (chatroomId: string | null) => void;
   onToggleSidebar?: () => void;
   showSidebar: boolean;
@@ -180,7 +180,7 @@ export default function ChatroomSidebar({
               <button
                 onClick={handleSelectGeneral}
                 className={`w-full flex items-center space-x-3 p-2 rounded-lg text-left hover:bg-gray-50 ${
-                  selectedChatroomId === null ? 'bg-blue-50 text-blue-700' : 'text-gray-700'
+                  !selectedChatroomId ? 'bg-blue-50 text-blue-700' : 'text-gray-700'
                 }`}
               >
                 <Hash size={16} className="text-gray-500" />

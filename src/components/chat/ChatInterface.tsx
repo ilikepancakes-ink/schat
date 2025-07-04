@@ -308,7 +308,7 @@ export default function ChatInterface() {
   };
 
   const getCurrentChatroomName = () => {
-    if (!selectedChatroomId) {
+    if (!selectedChatroomId || selectedChatroomId === null) {
       return 'General Chat';
     }
     // We could fetch chatroom details here, but for now just show the ID
