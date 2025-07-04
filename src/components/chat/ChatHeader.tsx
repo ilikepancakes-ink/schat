@@ -2,15 +2,25 @@
 
 import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { MessageCircle, LogOut, Settings, Shield, Users } from 'lucide-react';
+import { MessageCircle, LogOut, Settings, Shield, Users, Hash, Menu } from 'lucide-react';
 
 interface ChatHeaderProps {
   onToggleUserList: () => void;
   showUserList: boolean;
+  onToggleChatroomSidebar: () => void;
+  showChatroomSidebar: boolean;
+  currentChatroomName: string;
   onOpenAdminPanel?: () => void;
 }
 
-export default function ChatHeader({ onToggleUserList, showUserList, onOpenAdminPanel }: ChatHeaderProps) {
+export default function ChatHeader({
+  onToggleUserList,
+  showUserList,
+  onToggleChatroomSidebar,
+  showChatroomSidebar,
+  currentChatroomName,
+  onOpenAdminPanel
+}: ChatHeaderProps) {
   const { user, logout } = useAuth();
   const [showDropdown, setShowDropdown] = useState(false);
 
@@ -22,23 +32,53 @@ export default function ChatHeader({ onToggleUserList, showUserList, onOpenAdmin
   return (
     <header className="bg-white border-b border-gray-200 px-4 py-3">
       <div className="flex items-center justify-between">
-        {/* Left side - Logo and title */}
+        {/* Left side - Logo, title, and current chatroom */}
         <div className="flex items-center space-x-3">
+          <button
+            onClick={onToggleChatroomSidebar}
+            className={`p-2 rounded-lg transition-colors lg:hidden ${
+              showChatroomSidebar ? 'bg-blue-100 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
+            }`}
+            title="Toggle chatroom sidebar"
+          >
+            <Menu size={20} />
+          </button>
+
           <MessageCircle size={24} className="text-blue-600" />
-          <h1 className="text-xl font-bold text-gray-900">SchoolChat</h1>
-          <span className="text-sm text-gray-500 hidden sm:inline">
+          <div className="flex items-center space-x-2">
+            <h1 className="text-xl font-bold text-gray-900">SchoolChat</h1>
+            <span className="text-gray-400">•</span>
+            <div className="flex items-center space-x-1">
+              <Hash size={16} className="text-gray-500" />
+              <span className="text-sm font-medium text-gray-700">
+                {currentChatroomName}
+              </span>
+            </div>
+          </div>
+          <span className="text-sm text-gray-500 hidden lg:inline">
             Secure messaging
           </span>
         </div>
 
         {/* Right side - User info and controls */}
         <div className="flex items-center space-x-3">
+          {/* Toggle chatroom sidebar button (desktop) */}
+          <button
+            onClick={onToggleChatroomSidebar}
+            className={`hidden lg:flex p-2 rounded-lg transition-colors ${
+              showChatroomSidebar ? 'bg-blue-100 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
+            }`}
+            title="Toggle chatroom sidebar"
+          >
+            <Hash size={20} />
+          </button>
+
           {/* Toggle user list button */}
           <button
             onClick={onToggleUserList}
             className={`p-2 rounded-lg transition-colors ${
-              showUserList 
-                ? 'bg-blue-100 text-blue-600' 
+              showUserList
+                ? 'bg-blue-100 text-blue-600'
                 : 'text-gray-600 hover:bg-gray-100'
             }`}
             title="Toggle user list"

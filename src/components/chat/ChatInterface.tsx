@@ -7,6 +7,7 @@ import ChatHeader from './ChatHeader';
 import ChatMessage from './ChatMessage';
 import MessageInput from './MessageInput';
 import UserList from './UserList';
+import ChatroomSidebar from './ChatroomSidebar';
 import AdminPanel from '../admin/AdminPanel';
 import UserProfile from '../profile/UserProfile';
 import { UserProfile as UserProfileType } from '@/types/database';
@@ -19,6 +20,8 @@ export default function ChatInterface() {
   const [users, setUsers] = useState<ChatUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [showUserList, setShowUserList] = useState(true);
+  const [showChatroomSidebar, setShowChatroomSidebar] = useState(true);
+  const [selectedChatroomId, setSelectedChatroomId] = useState<string | null>(null);
   const [showAdminPanel, setShowAdminPanel] = useState(false);
   const [error, setError] = useState('');
   const [lastMessageTime, setLastMessageTime] = useState<string>('');
@@ -34,7 +37,7 @@ export default function ChatInterface() {
   useEffect(() => {
     loadMessages();
     loadUsers();
-  }, []);
+  }, [selectedChatroomId]);
 
   // Real-time polling for new messages
   useEffect(() => {
@@ -43,7 +46,7 @@ export default function ChatInterface() {
     }, 2000); // Poll every 2 seconds
 
     return () => clearInterval(interval);
-  }, []);
+  }, [selectedChatroomId]);
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -52,7 +55,11 @@ export default function ChatInterface() {
 
   const loadMessages = async () => {
     try {
-      const response = await apiClient.get('/api/messages', {
+      const endpoint = selectedChatroomId
+        ? `/api/chatrooms/${selectedChatroomId}/messages`
+        : '/api/messages';
+
+      const response = await apiClient.get(endpoint, {
         credentials: 'include',
       });
 
@@ -68,6 +75,10 @@ export default function ChatInterface() {
               setMessages(newMessages);
               setLastMessageTime(latestMessageTime);
             }
+          } else if (newMessages.length === 0) {
+            // Clear messages if switching to empty chatroom
+            setMessages([]);
+            setLastMessageTime('');
           }
         } else {
           setError(data.error || 'Failed to load messages');
@@ -104,7 +115,11 @@ export default function ChatInterface() {
 
   const sendMessage = async (content: string) => {
     try {
-      const response = await apiClient.post('/api/messages',
+      const endpoint = selectedChatroomId
+        ? `/api/chatrooms/${selectedChatroomId}/messages`
+        : '/api/messages';
+
+      const response = await apiClient.post(endpoint,
         { content },
         { credentials: 'include' }
       );
@@ -285,6 +300,21 @@ export default function ChatInterface() {
     }
   };
 
+  const handleSelectChatroom = (chatroomId: string | null) => {
+    setSelectedChatroomId(chatroomId);
+    setMessages([]); // Clear messages when switching chatrooms
+    setLastMessageTime('');
+    setLoading(true);
+  };
+
+  const getCurrentChatroomName = () => {
+    if (!selectedChatroomId) {
+      return 'General Chat';
+    }
+    // We could fetch chatroom details here, but for now just show the ID
+    return `Chatroom ${selectedChatroomId.slice(0, 8)}...`;
+  };
+
   if (loading) {
     return (
       <div className="h-screen flex items-center justify-center bg-gray-50">
@@ -318,11 +348,22 @@ export default function ChatInterface() {
       <ChatHeader
         onToggleUserList={() => setShowUserList(!showUserList)}
         showUserList={showUserList}
+        onToggleChatroomSidebar={() => setShowChatroomSidebar(!showChatroomSidebar)}
+        showChatroomSidebar={showChatroomSidebar}
+        currentChatroomName={getCurrentChatroomName()}
         onOpenAdminPanel={() => setShowAdminPanel(true)}
       />
 
       {/* Main content */}
       <div className="flex-1 flex overflow-hidden">
+        {/* Chatroom Sidebar */}
+        <ChatroomSidebar
+          selectedChatroomId={selectedChatroomId}
+          onSelectChatroom={handleSelectChatroom}
+          onToggleSidebar={() => setShowChatroomSidebar(false)}
+          showSidebar={showChatroomSidebar}
+        />
+
         {/* Chat area */}
         <div className="flex-1 flex flex-col">
           {/* Messages */}
