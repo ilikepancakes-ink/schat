@@ -3,6 +3,7 @@ import { registerUser } from '@/lib/auth';
 import { RegisterCredentials } from '@/types/database';
 import { validateRegistrationData } from '@/lib/validation';
 import { loginRateLimiter } from '@/lib/security';
+import { addUserToDefaultChatrooms } from '@/lib/chatroom-setup';
 
 export async function POST(request: NextRequest) {
   try {
@@ -33,8 +34,16 @@ export async function POST(request: NextRequest) {
     }
 
     const result = await registerUser(validation.sanitized as RegisterCredentials);
-    
+
     if (result.success && result.user) {
+      // Add user to default chatrooms
+      try {
+        await addUserToDefaultChatrooms(result.user.id);
+      } catch (chatroomError) {
+        console.error('Failed to add user to default chatrooms:', chatroomError);
+        // Don't fail registration if chatroom setup fails
+      }
+
       return NextResponse.json({
         success: true,
         message: 'User registered successfully',

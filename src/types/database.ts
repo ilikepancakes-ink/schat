@@ -113,3 +113,56 @@ export interface RegisterCredentials {
   password: string;
   confirmPassword: string;
 }
+
+export interface Chatroom {
+  id: string;
+  name: string;
+  description?: string;
+  created_by: string;
+  is_default: boolean;
+  is_staff_only: boolean;
+  invite_code?: string;
+  created_at: string;
+  updated_at: string;
+  member_count?: number;
+}
+
+export interface ChatroomMember {
+  id: string;
+  chatroom_id: string;
+  user_id: string;
+  role: 'owner' | 'admin' | 'member';
+  joined_at: string;
+  username?: string;
+  display_name?: string;
+  profile_picture_url?: string;
+  is_admin?: boolean;
+}
+
+export interface ChatroomMessage {
+  id: string;
+  chatroom_id: string;
+  user_id: string;
+  content: string;
+  created_at: string;
+  updated_at: string;
+  is_deleted: boolean;
+  deleted_by?: string;
+  username?: string;
+  display_name?: string;
+  profile_picture_url?: string;
+  is_admin?: boolean;
+}
+
+export interface ChatroomInvite {
+  id: string;
+  chatroom_id: string;
+  invited_by: string;
+  invited_user: string;
+  status: 'pending' | 'accepted' | 'declined' | 'reported';
+  invite_message?: string;
+  created_at: string;
+  updated_at: string;
+  chatroom_name?: string;
+  invited_by_username?: string;
+}

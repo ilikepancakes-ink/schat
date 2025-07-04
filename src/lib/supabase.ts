@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS users (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Messages table
+-- Messages table (for main chat)
 CREATE TABLE IF NOT EXISTS messages (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID REFERENCES users(id) ON DELETE CASCADE,
@@ -44,6 +44,54 @@ CREATE TABLE IF NOT EXISTS messages (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   is_deleted BOOLEAN DEFAULT FALSE,
   deleted_by UUID REFERENCES users(id) ON DELETE SET NULL
+);
+
+-- Chatrooms table
+CREATE TABLE IF NOT EXISTS chatrooms (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  description TEXT,
+  created_by UUID REFERENCES users(id) ON DELETE CASCADE,
+  is_default BOOLEAN DEFAULT FALSE,
+  is_staff_only BOOLEAN DEFAULT FALSE,
+  invite_code VARCHAR(50) UNIQUE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Chatroom members table
+CREATE TABLE IF NOT EXISTS chatroom_members (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  chatroom_id UUID REFERENCES chatrooms(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  role VARCHAR(20) DEFAULT 'member' CHECK (role IN ('owner', 'admin', 'member')),
+  joined_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE(chatroom_id, user_id)
+);
+
+-- Chatroom messages table
+CREATE TABLE IF NOT EXISTS chatroom_messages (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  chatroom_id UUID REFERENCES chatrooms(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  content TEXT NOT NULL, -- This will store encrypted content
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  is_deleted BOOLEAN DEFAULT FALSE,
+  deleted_by UUID REFERENCES users(id) ON DELETE SET NULL
+);
+
+-- Chatroom invites table
+CREATE TABLE IF NOT EXISTS chatroom_invites (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  chatroom_id UUID REFERENCES chatrooms(id) ON DELETE CASCADE,
+  invited_by UUID REFERENCES users(id) ON DELETE CASCADE,
+  invited_user UUID REFERENCES users(id) ON DELETE CASCADE,
+  status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'declined', 'reported')),
+  invite_message TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE(chatroom_id, invited_user)
 );
 
 -- User sessions table
@@ -102,6 +150,16 @@ CREATE INDEX IF NOT EXISTS idx_friends_status ON friends(status);
 CREATE INDEX IF NOT EXISTS idx_private_messages_sender_id ON private_messages(sender_id);
 CREATE INDEX IF NOT EXISTS idx_private_messages_recipient_id ON private_messages(recipient_id);
 CREATE INDEX IF NOT EXISTS idx_private_messages_created_at ON private_messages(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_chatrooms_created_by ON chatrooms(created_by);
+CREATE INDEX IF NOT EXISTS idx_chatrooms_invite_code ON chatrooms(invite_code);
+CREATE INDEX IF NOT EXISTS idx_chatroom_members_chatroom_id ON chatroom_members(chatroom_id);
+CREATE INDEX IF NOT EXISTS idx_chatroom_members_user_id ON chatroom_members(user_id);
+CREATE INDEX IF NOT EXISTS idx_chatroom_messages_chatroom_id ON chatroom_messages(chatroom_id);
+CREATE INDEX IF NOT EXISTS idx_chatroom_messages_user_id ON chatroom_messages(user_id);
+CREATE INDEX IF NOT EXISTS idx_chatroom_messages_created_at ON chatroom_messages(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_chatroom_invites_chatroom_id ON chatroom_invites(chatroom_id);
+CREATE INDEX IF NOT EXISTS idx_chatroom_invites_invited_user ON chatroom_invites(invited_user);
+CREATE INDEX IF NOT EXISTS idx_chatroom_invites_status ON chatroom_invites(status);
 
 -- Row Level Security (RLS) policies
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
@@ -110,6 +168,10 @@ ALTER TABLE user_sessions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE admin_actions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE friends ENABLE ROW LEVEL SECURITY;
 ALTER TABLE private_messages ENABLE ROW LEVEL SECURITY;
+ALTER TABLE chatrooms ENABLE ROW LEVEL SECURITY;
+ALTER TABLE chatroom_members ENABLE ROW LEVEL SECURITY;
+ALTER TABLE chatroom_messages ENABLE ROW LEVEL SECURITY;
+ALTER TABLE chatroom_invites ENABLE ROW LEVEL SECURITY;
 
 -- Users can read their own data and public user info
 CREATE POLICY "Users can read public user data" ON users
@@ -161,6 +223,65 @@ CREATE POLICY "Users can send private messages" ON private_messages
 
 CREATE POLICY "Users can update their own private messages" ON private_messages
   FOR UPDATE USING (auth.uid()::text = sender_id::text OR auth.uid()::text = recipient_id::text);
+
+-- Chatrooms policies
+CREATE POLICY "Users can read chatrooms they are members of" ON chatrooms
+  FOR SELECT USING (
+    id IN (
+      SELECT chatroom_id FROM chatroom_members WHERE user_id::text = auth.uid()::text
+    ) OR is_default = true
+  );
+
+CREATE POLICY "Users can create chatrooms" ON chatrooms
+  FOR INSERT WITH CHECK (auth.uid()::text = created_by::text);
+
+CREATE POLICY "Chatroom owners can update their chatrooms" ON chatrooms
+  FOR UPDATE USING (auth.uid()::text = created_by::text);
+
+-- Chatroom members policies
+CREATE POLICY "Users can read chatroom members for rooms they are in" ON chatroom_members
+  FOR SELECT USING (
+    chatroom_id IN (
+      SELECT chatroom_id FROM chatroom_members WHERE user_id::text = auth.uid()::text
+    )
+  );
+
+CREATE POLICY "Users can join chatrooms" ON chatroom_members
+  FOR INSERT WITH CHECK (auth.uid()::text = user_id::text);
+
+CREATE POLICY "Users can leave chatrooms" ON chatroom_members
+  FOR DELETE USING (auth.uid()::text = user_id::text);
+
+-- Chatroom messages policies
+CREATE POLICY "Users can read messages from chatrooms they are in" ON chatroom_messages
+  FOR SELECT USING (
+    chatroom_id IN (
+      SELECT chatroom_id FROM chatroom_members WHERE user_id::text = auth.uid()::text
+    )
+  );
+
+CREATE POLICY "Users can send messages to chatrooms they are in" ON chatroom_messages
+  FOR INSERT WITH CHECK (
+    auth.uid()::text = user_id::text AND
+    chatroom_id IN (
+      SELECT chatroom_id FROM chatroom_members WHERE user_id::text = auth.uid()::text
+    )
+  );
+
+-- Chatroom invites policies
+CREATE POLICY "Users can read their own invites" ON chatroom_invites
+  FOR SELECT USING (auth.uid()::text = invited_user::text OR auth.uid()::text = invited_by::text);
+
+CREATE POLICY "Users can send invites to chatrooms they are in" ON chatroom_invites
+  FOR INSERT WITH CHECK (
+    auth.uid()::text = invited_by::text AND
+    chatroom_id IN (
+      SELECT chatroom_id FROM chatroom_members WHERE user_id::text = auth.uid()::text
+    )
+  );
+
+CREATE POLICY "Users can update their own invites" ON chatroom_invites
+  FOR UPDATE USING (auth.uid()::text = invited_user::text);
 
 -- Storage bucket for profile pictures
 INSERT INTO storage.buckets (id, name, public) VALUES ('avatars', 'avatars', true);
