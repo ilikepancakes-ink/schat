@@ -105,7 +105,26 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { name, description } = body;
+    const { name, description, is_staff_only } = body;
+
+    console.log('Creating chatroom with data:', { name, description, is_staff_only, userId: authResult.user.id });
+
+    // Test database connection
+    const { data: testData, error: testError } = await supabaseAdmin
+      .from('users')
+      .select('id')
+      .eq('id', userId)
+      .single();
+
+    if (testError) {
+      console.error('Database connection test failed:', testError);
+      return NextResponse.json({
+        success: false,
+        error: `Database connection failed: ${testError.message}`,
+      }, { status: 500 });
+    }
+
+    console.log('Database connection test passed:', testData);
 
     if (!name || name.trim().length === 0) {
       return NextResponse.json({
@@ -126,15 +145,20 @@ export async function POST(request: NextRequest) {
     // Generate a unique invite code
     const inviteCode = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
 
+    const chatroomData = {
+      name: name.trim(),
+      description: description?.trim() || null,
+      created_by: userId,
+      invite_code: inviteCode,
+      is_staff_only: is_staff_only || false,
+    };
+
+    console.log('Inserting chatroom with data:', chatroomData);
+
     // Create the chatroom
     const { data: chatroom, error: chatroomError } = await supabaseAdmin
       .from('chatrooms')
-      .insert({
-        name: name.trim(),
-        description: description?.trim() || null,
-        created_by: userId,
-        invite_code: inviteCode,
-      })
+      .insert(chatroomData)
       .select()
       .single();
 
@@ -142,18 +166,24 @@ export async function POST(request: NextRequest) {
       console.error('Chatroom creation error:', chatroomError);
       return NextResponse.json({
         success: false,
-        error: 'Failed to create chatroom',
+        error: `Failed to create chatroom: ${chatroomError.message}`,
       }, { status: 500 });
     }
 
+    console.log('Created chatroom successfully:', chatroom);
+
     // Add the creator as the owner of the chatroom
+    const memberData = {
+      chatroom_id: chatroom.id,
+      user_id: userId,
+      role: 'owner',
+    };
+
+    console.log('Adding member with data:', memberData);
+
     const { error: memberError } = await supabaseAdmin
       .from('chatroom_members')
-      .insert({
-        chatroom_id: chatroom.id,
-        user_id: userId,
-        role: 'owner',
-      });
+      .insert(memberData);
 
     if (memberError) {
       console.error('Chatroom member creation error:', memberError);
@@ -162,12 +192,14 @@ export async function POST(request: NextRequest) {
         .from('chatrooms')
         .delete()
         .eq('id', chatroom.id);
-      
+
       return NextResponse.json({
         success: false,
-        error: 'Failed to create chatroom',
+        error: `Failed to add member to chatroom: ${memberError.message}`,
       }, { status: 500 });
     }
+
+    console.log('Successfully created chatroom and added member');
 
     return NextResponse.json({
       success: true,
