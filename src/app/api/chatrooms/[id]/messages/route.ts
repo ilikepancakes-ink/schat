@@ -73,7 +73,7 @@ export async function GET(
         updated_at,
         is_deleted,
         deleted_by,
-        users!chatroom_messages_user_id_fkey(username, profile_picture_url, is_admin)
+        users!chatroom_messages_user_id_fkey(username, is_admin)
       `)
       .eq('chatroom_id', chatroomId)
       .eq('is_deleted', false)
@@ -106,7 +106,7 @@ export async function GET(
           deleted_by: message.deleted_by,
           username: (message.users as any).username,
           display_name: (message.users as any).username, // Use username as fallback for display_name
-          profile_picture_url: (message.users as any).profile_picture_url,
+          profile_picture_url: null, // Profile pictures not implemented yet
           is_admin: (message.users as any).is_admin,
         };
       } catch (decryptError) {
@@ -122,7 +122,7 @@ export async function GET(
           deleted_by: message.deleted_by,
           username: (message.users as any).username,
           display_name: (message.users as any).username, // Use username as fallback for display_name
-          profile_picture_url: (message.users as any).profile_picture_url,
+          profile_picture_url: null, // Profile pictures not implemented yet
           is_admin: (message.users as any).is_admin,
         };
       }
@@ -261,8 +261,8 @@ export async function POST(
       ...newMessage,
       content: validation.sanitized!.content, // Return decrypted content
       username: authResult.user.username,
-      display_name: authResult.user.display_name,
-      profile_picture_url: authResult.user.profile_picture_url,
+      display_name: authResult.user.username, // Use username as fallback
+      profile_picture_url: null, // Profile pictures not implemented yet
       is_admin: authResult.user.is_admin,
     };
 
