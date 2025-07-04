@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { ChatMessage as ChatMessageType, ChatUser } from '@/types/database';
+import { ChatMessage as ChatMessageType, ChatUser, ChatroomInvite } from '@/types/database';
 import ChatHeader from './ChatHeader';
 import ChatMessage from './ChatMessage';
 import MessageInput from './MessageInput';
@@ -10,6 +10,7 @@ import UserList from './UserList';
 import ChatroomSidebar from './ChatroomSidebar';
 import AdminPanel from '../admin/AdminPanel';
 import UserProfile from '../profile/UserProfile';
+import InviteNotifications from './InviteNotifications';
 import { UserProfile as UserProfileType } from '@/types/database';
 import { apiClient } from '@/lib/api-client';
 
@@ -26,6 +27,8 @@ export default function ChatInterface() {
   const [error, setError] = useState('');
   const [lastMessageTime, setLastMessageTime] = useState<string>('');
   const [selectedProfile, setSelectedProfile] = useState<UserProfileType | null>(null);
+  const [pendingInvites, setPendingInvites] = useState<ChatroomInvite[]>([]);
+  const [showInviteNotifications, setShowInviteNotifications] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Scroll to bottom of messages
@@ -37,12 +40,14 @@ export default function ChatInterface() {
   useEffect(() => {
     loadMessages();
     loadUsers();
+    loadPendingInvites();
   }, [selectedChatroomId]);
 
-  // Real-time polling for new messages
+  // Real-time polling for new messages and invites
   useEffect(() => {
     const interval = setInterval(() => {
       loadMessages();
+      loadPendingInvites();
     }, 2000); // Poll every 2 seconds
 
     return () => clearInterval(interval);
@@ -110,6 +115,49 @@ export default function ChatInterface() {
       }
     } catch (error) {
       console.error('Error loading users:', error);
+    }
+  };
+
+  const loadPendingInvites = async () => {
+    try {
+      const response = await apiClient.get('/api/chatrooms/invites', {
+        credentials: 'include',
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          setPendingInvites(data.invites || []);
+          setShowInviteNotifications(data.invites?.length > 0);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading pending invites:', error);
+    }
+  };
+
+  const handleInviteResponse = async (inviteId: string, action: 'accept' | 'decline' | 'report') => {
+    try {
+      const response = await apiClient.patch('/api/chatrooms/invites',
+        { inviteId, action },
+        { credentials: 'include' }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          // Remove the invite from pending list
+          setPendingInvites(prev => prev.filter(invite => invite.id !== inviteId));
+
+          // If accepted, refresh chatrooms
+          if (action === 'accept') {
+            // Optionally switch to the joined chatroom
+            // You might want to add this functionality
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error responding to invite:', error);
     }
   };
 
@@ -231,10 +279,31 @@ export default function ChatInterface() {
     }
   };
 
-  const handleSendMessage = (userId: string) => {
-    // TODO: Implement private messaging
-    console.log('Send message to:', userId);
-    setSelectedProfile(null);
+  const handleSendMessage = async (userId: string) => {
+    try {
+      const response = await apiClient.post('/api/chatrooms/dm',
+        { otherUserId: userId },
+        { credentials: 'include' }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          // Switch to the DM chatroom
+          setSelectedChatroomId(data.chatroom.id);
+          setSelectedProfile(null);
+
+          // Optionally show a success message
+          console.log(data.message || 'DM chatroom created');
+        } else {
+          console.error('Failed to create DM:', data.error);
+        }
+      } else {
+        console.error('Failed to create DM chatroom');
+      }
+    } catch (error) {
+      console.error('Error creating DM:', error);
+    }
   };
 
   const handleAddFriend = async (userId: string) => {
@@ -400,6 +469,7 @@ export default function ChatInterface() {
             onUnbanUser={(userId, username) => handleUserAction('unban', userId, username)}
             onGrantAdmin={(userId, username) => handleUserAction('grant_admin', userId, username)}
             onRevokeAdmin={(userId, username) => handleUserAction('revoke_admin', userId, username)}
+            onUserClick={handleUserClick}
           />
         )}
       </div>
@@ -420,6 +490,15 @@ export default function ChatInterface() {
           onAddFriend={handleAddFriend}
           onRemoveFriend={handleRemoveFriend}
           onUpdateProfile={handleUpdateProfile}
+        />
+      )}
+
+      {/* Invite Notifications */}
+      {showInviteNotifications && pendingInvites.length > 0 && (
+        <InviteNotifications
+          invites={pendingInvites}
+          onResponse={handleInviteResponse}
+          onClose={() => setShowInviteNotifications(false)}
         />
       )}
     </div>

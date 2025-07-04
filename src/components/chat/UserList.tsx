@@ -11,14 +11,16 @@ interface UserListProps {
   onUnbanUser?: (userId: string, username: string) => void;
   onGrantAdmin?: (userId: string, username: string) => void;
   onRevokeAdmin?: (userId: string, username: string) => void;
+  onUserClick?: (userId: string) => void;
 }
 
-export default function UserList({ 
-  users, 
-  onBanUser, 
-  onUnbanUser, 
-  onGrantAdmin, 
-  onRevokeAdmin 
+export default function UserList({
+  users,
+  onBanUser,
+  onUnbanUser,
+  onGrantAdmin,
+  onRevokeAdmin,
+  onUserClick
 }: UserListProps) {
   const { user: currentUser } = useAuth();
   const isAdmin = currentUser?.is_admin;
@@ -83,15 +85,16 @@ export default function UserList({
                 />
 
                 {/* Username */}
-                <span
-                  className={`text-sm font-medium truncate ${
-                    user.is_banned ? 'text-red-500 line-through' : 'text-gray-900'
+                <button
+                  onClick={() => onUserClick?.(user.id)}
+                  className={`text-sm font-medium truncate hover:underline cursor-pointer text-left ${
+                    user.is_banned ? 'text-red-500 line-through' : 'text-gray-900 hover:text-blue-600'
                   }`}
-                  title={user.username}
+                  title={`View ${user.username}'s profile`}
                 >
                   {user.username}
                   {user.id === currentUser?.id && ' (You)'}
-                </span>
+                </button>
 
                 {/* Admin badge */}
                 {user.is_admin && (

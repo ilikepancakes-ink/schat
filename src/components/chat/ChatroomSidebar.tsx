@@ -137,13 +137,15 @@ export default function ChatroomSidebar({
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold text-gray-900">Chatrooms</h3>
             <div className="flex items-center space-x-2">
-              <button
-                onClick={() => setShowCreateForm(true)}
-                className="p-1 text-blue-600 hover:bg-blue-100 rounded"
-                title="Create new chatroom"
-              >
-                <Plus size={18} />
-              </button>
+              {user?.is_admin && (
+                <button
+                  onClick={() => setShowCreateForm(true)}
+                  className="p-1 text-blue-600 hover:bg-blue-100 rounded"
+                  title="Create new chatroom"
+                >
+                  <Plus size={18} />
+                </button>
+              )}
               {onToggleSidebar && (
                 <button
                   onClick={onToggleSidebar}
