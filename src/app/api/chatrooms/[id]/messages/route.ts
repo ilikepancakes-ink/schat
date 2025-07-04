@@ -73,7 +73,7 @@ export async function GET(
         updated_at,
         is_deleted,
         deleted_by,
-        users!inner(username, display_name, profile_picture_url, is_admin)
+        users!chatroom_messages_user_id_fkey(username, display_name, profile_picture_url, is_admin)
       `)
       .eq('chatroom_id', chatroomId)
       .eq('is_deleted', false)
