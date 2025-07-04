@@ -307,23 +307,29 @@ export default function ChatInterface() {
   };
 
   const handleUserClick = async (userId: string) => {
+    console.log('🔍 handleUserClick called with userId:', userId);
     try {
+      console.log('📡 Making API call to /api/profile/' + userId);
       const response = await apiClient.get(`/api/profile/${userId}`, {
         credentials: 'include',
       });
 
+      console.log('📡 API response status:', response.status);
       if (response.ok) {
         const data = await response.json();
+        console.log('📡 API response data:', data);
         if (data.success) {
+          console.log('✅ Setting selectedProfile to:', data.profile);
           setSelectedProfile(data.profile);
+          console.log('✅ selectedProfile state should now be set');
         } else {
-          console.error('Profile API returned error:', data.error);
+          console.error('❌ Profile API returned error:', data.error);
         }
       } else {
-        console.error('Profile API request failed with status:', response.status);
+        console.error('❌ Profile API request failed with status:', response.status);
       }
     } catch (error) {
-      console.error('Error fetching profile:', error);
+      console.error('❌ Error fetching profile:', error);
     }
   };
 
@@ -533,14 +539,17 @@ export default function ChatInterface() {
       )}
 
       {selectedProfile && (
-        <UserProfile
-          profile={selectedProfile}
-          onClose={() => setSelectedProfile(null)}
-          onSendMessage={handleSendMessage}
-          onAddFriend={handleAddFriend}
-          onRemoveFriend={handleRemoveFriend}
-          onUpdateProfile={handleUpdateProfile}
-        />
+        <>
+          {console.log('🎭 Rendering UserProfile component with profile:', selectedProfile)}
+          <UserProfile
+            profile={selectedProfile}
+            onClose={() => setSelectedProfile(null)}
+            onSendMessage={handleSendMessage}
+            onAddFriend={handleAddFriend}
+            onRemoveFriend={handleRemoveFriend}
+            onUpdateProfile={handleUpdateProfile}
+          />
+        </>
       )}
 
       {/* Invite Notifications */}

@@ -86,7 +86,11 @@ export default function UserList({
 
                 {/* Username */}
                 <button
-                  onClick={() => onUserClick?.(user.id)}
+                  onClick={() => {
+                    console.log('👤 Username clicked:', user.username, 'ID:', user.id);
+                    console.log('👤 onUserClick function exists:', !!onUserClick);
+                    onUserClick?.(user.id);
+                  }}
                   className={`text-sm font-medium truncate hover:underline cursor-pointer text-left ${
                     user.is_banned ? 'text-red-500 line-through' : 'text-gray-900 hover:text-blue-600'
                   }`}
