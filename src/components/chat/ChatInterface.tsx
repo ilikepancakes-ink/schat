@@ -113,6 +113,7 @@ export default function ChatInterface() {
         if (data.success) {
           setUsers(data.users || []);
           console.log('✅ Users loaded successfully:', data.users?.length || 0);
+          console.log('🔍 User IDs in list:', data.users?.map((u: any) => ({ username: u.username, id: u.id })));
         }
       }
     } catch (error) {
