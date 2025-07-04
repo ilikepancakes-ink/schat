@@ -4,6 +4,8 @@ import { getAllMessages, sendMessage } from '@/lib/database';
 import { validateMessageContent, validatePagination } from '@/lib/validation';
 import { messageRateLimiter } from '@/lib/security';
 
+export const runtime = 'nodejs';
+
 export async function GET(request: NextRequest) {
   try {
     const token = request.cookies.get('auth-token')?.value;

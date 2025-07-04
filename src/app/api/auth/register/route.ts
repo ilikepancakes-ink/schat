@@ -5,6 +5,8 @@ import { validateRegistrationData } from '@/lib/validation';
 import { loginRateLimiter } from '@/lib/security';
 import { addUserToDefaultChatrooms } from '@/lib/chatroom-setup';
 
+export const runtime = 'nodejs';
+
 export async function POST(request: NextRequest) {
   try {
     // Rate limiting (same as login to prevent spam registrations)

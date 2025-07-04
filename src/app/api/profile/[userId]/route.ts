@@ -3,6 +3,8 @@ import { validateSession } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase';
 import { UserProfile } from '@/types/database';
 
+export const runtime = 'nodejs';
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ userId: string }> }

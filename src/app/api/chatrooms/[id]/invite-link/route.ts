@@ -2,11 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { validateSession } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase';
 
+export const runtime = 'nodejs';
+
 // GET /api/chatrooms/[id]/invite-link - Get invite link for a chatroom
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const resolvedParams = await params;
   try {
     const token = request.cookies.get('auth-token')?.value;
     
@@ -25,7 +28,7 @@ export async function GET(
       }, { status: 401 });
     }
 
-    const chatroomId = params.id;
+    const chatroomId = resolvedParams.id;
     const userId = authResult.user.id;
 
     // Check if user is a member of the chatroom

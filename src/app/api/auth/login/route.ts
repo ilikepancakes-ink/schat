@@ -4,6 +4,8 @@ import { LoginCredentials } from '@/types/database';
 import { validateLoginData } from '@/lib/validation';
 import { loginRateLimiter } from '@/lib/security';
 
+export const runtime = 'nodejs';
+
 export async function POST(request: NextRequest) {
   try {
     // Rate limiting

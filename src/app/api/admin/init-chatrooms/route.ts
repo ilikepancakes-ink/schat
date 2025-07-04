@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { validateSession } from '@/lib/auth';
 import { initializeDefaultChatrooms } from '@/lib/chatroom-setup';
 
+export const runtime = 'nodejs';
+
 // POST /api/admin/init-chatrooms - Initialize default chatrooms (admin only)
 export async function POST(request: NextRequest) {
   try {

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { validateSession } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase';
+
+export const runtime = 'nodejs';
 import { Chatroom } from '@/types/database';
 
 // GET /api/chatrooms - Get all chatrooms the user is a member of

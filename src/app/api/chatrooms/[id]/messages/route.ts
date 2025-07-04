@@ -4,11 +4,14 @@ import { supabaseAdmin } from '@/lib/supabase';
 import { encryptMessage, decryptMessage } from '@/lib/encryption';
 import { validateMessageContent } from '@/lib/validation';
 
+export const runtime = 'nodejs';
+
 // GET /api/chatrooms/[id]/messages - Get messages for a specific chatroom
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const resolvedParams = await params;
   try {
     const token = request.cookies.get('auth-token')?.value;
     
@@ -27,7 +30,7 @@ export async function GET(
       }, { status: 401 });
     }
 
-    const chatroomId = params.id;
+    const chatroomId = resolvedParams.id;
     const userId = authResult.user.id;
 
     // Check if user is a member of this chatroom
@@ -90,10 +93,10 @@ export async function GET(
           updated_at: message.updated_at,
           is_deleted: message.is_deleted,
           deleted_by: message.deleted_by,
-          username: message.users.username,
-          display_name: message.users.display_name,
-          profile_picture_url: message.users.profile_picture_url,
-          is_admin: message.users.is_admin,
+          username: (message.users as any).username,
+          display_name: (message.users as any).display_name,
+          profile_picture_url: (message.users as any).profile_picture_url,
+          is_admin: (message.users as any).is_admin,
         };
       } catch (decryptError) {
         console.error('Message decryption error:', decryptError);
@@ -106,10 +109,10 @@ export async function GET(
           updated_at: message.updated_at,
           is_deleted: message.is_deleted,
           deleted_by: message.deleted_by,
-          username: message.users.username,
-          display_name: message.users.display_name,
-          profile_picture_url: message.users.profile_picture_url,
-          is_admin: message.users.is_admin,
+          username: (message.users as any).username,
+          display_name: (message.users as any).display_name,
+          profile_picture_url: (message.users as any).profile_picture_url,
+          is_admin: (message.users as any).is_admin,
         };
       }
     }) || [];
@@ -134,8 +137,9 @@ export async function GET(
 // POST /api/chatrooms/[id]/messages - Send a message to a chatroom
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const resolvedParams = await params;
   try {
     const token = request.cookies.get('auth-token')?.value;
     
@@ -161,7 +165,7 @@ export async function POST(
       }, { status: 403 });
     }
 
-    const chatroomId = params.id;
+    const chatroomId = resolvedParams.id;
     const userId = authResult.user.id;
     const body = await request.json();
 

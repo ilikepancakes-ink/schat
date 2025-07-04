@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { validateSession } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase';
 
+export const runtime = 'nodejs';
+
 // POST /api/chatrooms/join - Join a chatroom via invite code
 export async function POST(request: NextRequest) {
   try {
@@ -193,7 +195,7 @@ export async function GET(request: NextRequest) {
         description: chatroom.description,
         is_staff_only: chatroom.is_staff_only,
         created_at: chatroom.created_at,
-        created_by_username: chatroom.users.username,
+        created_by_username: (chatroom.users as any).username,
         member_count: totalMembers,
         is_already_member: isAlreadyMember,
         can_join: !isAlreadyMember && (!chatroom.is_staff_only || authResult.user.is_admin),

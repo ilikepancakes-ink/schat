@@ -4,6 +4,8 @@ import { supabaseAdmin } from '@/lib/supabase';
 import { encryptMessage, decryptMessage } from '@/lib/encryption';
 import { validateMessageContent } from '@/lib/validation';
 
+export const runtime = 'nodejs';
+
 export async function GET(request: NextRequest) {
   try {
     const token = request.cookies.get('auth-token')?.value;

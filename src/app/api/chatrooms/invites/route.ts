@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { validateSession } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase';
 
+export const runtime = 'nodejs';
+
 // GET /api/chatrooms/invites - Get pending invites for the current user
 export async function GET(request: NextRequest) {
   try {
@@ -60,8 +62,8 @@ export async function GET(request: NextRequest) {
       invite_message: invite.invite_message,
       created_at: invite.created_at,
       updated_at: invite.updated_at,
-      chatroom_name: invite.chatrooms.name,
-      invited_by_username: invite.users.username,
+      chatroom_name: (invite.chatrooms as any).name,
+      invited_by_username: (invite.users as any).username,
     })) || [];
 
     return NextResponse.json({

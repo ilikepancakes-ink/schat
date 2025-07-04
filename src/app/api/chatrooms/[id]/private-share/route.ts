@@ -2,11 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { validateSession } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase';
 
+export const runtime = 'nodejs';
+
 // POST /api/chatrooms/[id]/private-share - Send private invite to a user
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const resolvedParams = await params;
   try {
     const token = request.cookies.get('auth-token')?.value;
     
@@ -35,7 +38,7 @@ export async function POST(
       }, { status: 400 });
     }
 
-    const chatroomId = params.id;
+    const chatroomId = resolvedParams.id;
     const inviterId = authResult.user.id;
 
     // Check if user is a member of the chatroom
