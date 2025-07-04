@@ -33,6 +33,8 @@ export async function GET(
     const chatroomId = resolvedParams.id;
     const userId = authResult.user.id;
 
+    console.log('Fetching messages for chatroom:', chatroomId, 'user:', userId);
+
     // Check if user is a member of this chatroom
     const { data: membership, error: membershipError } = await supabaseAdmin
       .from('chatroom_members')
@@ -41,10 +43,14 @@ export async function GET(
       .eq('user_id', userId)
       .single();
 
+    console.log('Membership check result:', { membership, membershipError });
+
     if (membershipError || !membership) {
+      console.error('User not a member:', { chatroomId, userId, membershipError });
       return NextResponse.json({
         success: false,
         error: 'You are not a member of this chatroom',
+        debug: { chatroomId, userId, membershipError: membershipError?.message }
       }, { status: 403 });
     }
 
@@ -54,6 +60,8 @@ export async function GET(
     const offset = parseInt(url.searchParams.get('offset') || '0');
 
     // Fetch messages with user information
+    console.log('Fetching messages for chatroom:', chatroomId, 'with limit:', limit, 'offset:', offset);
+
     const { data: messages, error } = await supabaseAdmin
       .from('chatroom_messages')
       .select(`
@@ -72,11 +80,14 @@ export async function GET(
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1);
 
+    console.log('Messages fetch result:', { messagesCount: messages?.length || 0, error });
+
     if (error) {
       console.error('Chatroom messages fetch error:', error);
       return NextResponse.json({
         success: false,
         error: 'Failed to fetch messages',
+        debug: { chatroomId, error: error.message }
       }, { status: 500 });
     }
 
