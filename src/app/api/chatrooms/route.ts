@@ -231,6 +231,23 @@ export async function POST(request: NextRequest) {
 
     console.log('Successfully created chatroom and added member');
 
+    // Send a default welcome message to the chatroom
+    const welcomeMessage = "Chatroom made!";
+    const { error: messageError } = await supabaseAdmin
+      .from('chatroom_messages')
+      .insert({
+        chatroom_id: chatroom.id,
+        user_id: userId,
+        content: welcomeMessage,
+      });
+
+    if (messageError) {
+      console.error('Failed to send welcome message:', messageError);
+      // Don't fail the chatroom creation if welcome message fails
+    } else {
+      console.log('Welcome message sent successfully');
+    }
+
     return NextResponse.json({
       success: true,
       chatroom: {
