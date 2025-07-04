@@ -27,8 +27,27 @@ export async function GET(request: NextRequest) {
 
     const userId = authResult.user.id;
 
-    // Get all chatrooms the user is a member of, including default rooms
-    const { data: chatrooms, error } = await supabaseAdmin
+    console.log('Fetching chatrooms for user:', userId);
+
+    // First, get the user's memberships
+    const { data: memberships, error: membershipError } = await supabaseAdmin
+      .from('chatroom_members')
+      .select('chatroom_id')
+      .eq('user_id', userId);
+
+    if (membershipError) {
+      console.error('Membership fetch error:', membershipError);
+      return NextResponse.json({
+        success: false,
+        error: `Failed to fetch memberships: ${membershipError.message}`,
+      }, { status: 500 });
+    }
+
+    const memberChatroomIds = memberships?.map(m => m.chatroom_id) || [];
+    console.log('User is member of chatrooms:', memberChatroomIds);
+
+    // Get all chatrooms the user has access to (member of OR default)
+    let query = supabaseAdmin
       .from('chatrooms')
       .select(`
         id,
@@ -39,19 +58,30 @@ export async function GET(request: NextRequest) {
         is_staff_only,
         invite_code,
         created_at,
-        updated_at,
-        chatroom_members!inner(user_id)
-      `)
-      .or(`chatroom_members.user_id.eq.${userId},is_default.eq.true`)
-      .order('created_at', { ascending: true });
+        updated_at
+      `);
+
+    // If user has memberships, include those chatrooms OR default chatrooms
+    if (memberChatroomIds.length > 0) {
+      query = query.or(`id.in.(${memberChatroomIds.join(',')}),is_default.eq.true`);
+    } else {
+      // If no memberships, just get default chatrooms
+      query = query.eq('is_default', true);
+    }
+
+    const { data: chatrooms, error } = await query.order('created_at', { ascending: true });
 
     if (error) {
       console.error('Chatrooms fetch error:', error);
       return NextResponse.json({
         success: false,
-        error: 'Failed to fetch chatrooms',
+        error: `Failed to fetch chatrooms: ${error.message}`,
       }, { status: 500 });
     }
+
+    console.log('Found chatrooms:', chatrooms?.length || 0);
+
+
 
     // Get member counts for each chatroom
     const chatroomIds = chatrooms?.map(room => room.id) || [];
