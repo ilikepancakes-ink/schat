@@ -307,29 +307,20 @@ export default function ChatInterface() {
   };
 
   const handleUserClick = async (userId: string) => {
-    console.log('handleUserClick called with userId:', userId);
-    console.log('Current selectedProfile state:', selectedProfile);
     try {
       const response = await apiClient.get(`/api/profile/${userId}`, {
         credentials: 'include',
       });
 
-      console.log('Profile API response status:', response.status);
-
       if (response.ok) {
         const data = await response.json();
-        console.log('Profile API response data:', data);
         if (data.success) {
-          console.log('Setting selectedProfile to:', data.profile);
           setSelectedProfile(data.profile);
-          console.log('Profile set successfully');
         } else {
           console.error('Profile API returned error:', data.error);
         }
       } else {
         console.error('Profile API request failed with status:', response.status);
-        const errorText = await response.text();
-        console.error('Error response body:', errorText);
       }
     } catch (error) {
       console.error('Error fetching profile:', error);
@@ -515,7 +506,7 @@ export default function ChatInterface() {
           <MessageInput
             onSendMessage={sendMessage}
             onCommand={handleCommand}
-            currentChatroomId={selectedChatroomId}
+            currentChatroomId={selectedChatroomId || undefined}
             disabled={user?.is_banned}
           />
         </div>
@@ -542,17 +533,14 @@ export default function ChatInterface() {
       )}
 
       {selectedProfile && (
-        <>
-          {console.log('Rendering UserProfile with profile:', selectedProfile)}
-          <UserProfile
-            profile={selectedProfile}
-            onClose={() => setSelectedProfile(null)}
-            onSendMessage={handleSendMessage}
-            onAddFriend={handleAddFriend}
-            onRemoveFriend={handleRemoveFriend}
-            onUpdateProfile={handleUpdateProfile}
-          />
-        </>
+        <UserProfile
+          profile={selectedProfile}
+          onClose={() => setSelectedProfile(null)}
+          onSendMessage={handleSendMessage}
+          onAddFriend={handleAddFriend}
+          onRemoveFriend={handleRemoveFriend}
+          onUpdateProfile={handleUpdateProfile}
+        />
       )}
 
       {/* Invite Notifications */}
