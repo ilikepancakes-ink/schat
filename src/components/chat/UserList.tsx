@@ -57,10 +57,10 @@ export default function UserList({
   };
 
   return (
-    <div className="bg-white border-l border-gray-200 w-64 flex flex-col">
+    <div className="bg-white dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 w-64 flex flex-col transition-colors duration-200">
       {/* Header */}
-      <div className="p-4 border-b border-gray-200">
-        <h3 className="text-lg font-semibold text-gray-900">
+      <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
           Users ({users.length})
         </h3>
       </div>
@@ -71,8 +71,8 @@ export default function UserList({
           {sortedUsers.map((user) => (
             <div
               key={user.id}
-              className={`flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 ${
-                user.id === currentUser?.id ? 'bg-blue-50' : ''
+              className={`flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 ${
+                user.id === currentUser?.id ? 'bg-blue-50 dark:bg-blue-900/20' : ''
               }`}
             >
               <div className="flex items-center space-x-2 flex-1 min-w-0">
@@ -80,7 +80,7 @@ export default function UserList({
                 <Circle
                   size={8}
                   className={`${
-                    user.is_online ? 'text-green-500 fill-current' : 'text-gray-300'
+                    user.is_online ? 'text-green-500 fill-current' : 'text-gray-300 dark:text-gray-600'
                   }`}
                 />
 
@@ -91,8 +91,8 @@ export default function UserList({
                     console.log('👤 onUserClick function exists:', !!onUserClick);
                     onUserClick?.(user.id);
                   }}
-                  className={`text-sm font-medium truncate hover:underline cursor-pointer text-left ${
-                    user.is_banned ? 'text-red-500 line-through' : 'text-gray-900 hover:text-blue-600'
+                  className={`text-sm font-medium truncate hover:underline cursor-pointer text-left transition-colors duration-200 ${
+                    user.is_banned ? 'text-red-500 line-through' : 'text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400'
                   }`}
                   title={`View ${user.username}'s profile`}
                 >
@@ -102,7 +102,7 @@ export default function UserList({
 
                 {/* Admin badge */}
                 {user.is_admin && (
-                  <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                  <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">
                     <Shield size={10} className="mr-0.5" />
                     STAFF
                   </span>
@@ -121,7 +121,7 @@ export default function UserList({
                   {user.is_banned ? (
                     <button
                       onClick={() => handleUserAction('unban', user.id, user.username)}
-                      className="p-1 text-green-600 hover:bg-green-100 rounded"
+                      className="p-1 text-green-600 hover:bg-green-100 dark:hover:bg-green-900/20 rounded transition-colors duration-200"
                       title="Unban user"
                     >
                       <UserCheck size={14} />
@@ -129,7 +129,7 @@ export default function UserList({
                   ) : (
                     <button
                       onClick={() => handleUserAction('ban', user.id, user.username)}
-                      className="p-1 text-red-600 hover:bg-red-100 rounded"
+                      className="p-1 text-red-600 hover:bg-red-100 dark:hover:bg-red-900/20 rounded transition-colors duration-200"
                       title="Ban user"
                     >
                       <UserX size={14} />
@@ -140,7 +140,7 @@ export default function UserList({
                   {user.is_admin ? (
                     <button
                       onClick={() => handleUserAction('revoke_admin', user.id, user.username)}
-                      className="p-1 text-orange-600 hover:bg-orange-100 rounded"
+                      className="p-1 text-orange-600 hover:bg-orange-100 dark:hover:bg-orange-900/20 rounded transition-colors duration-200"
                       title="Revoke admin privileges"
                     >
                       <Crown size={14} />
@@ -148,7 +148,7 @@ export default function UserList({
                   ) : (
                     <button
                       onClick={() => handleUserAction('grant_admin', user.id, user.username)}
-                      className="p-1 text-blue-600 hover:bg-blue-100 rounded"
+                      className="p-1 text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-900/20 rounded transition-colors duration-200"
                       title="Grant admin privileges"
                     >
                       <Crown size={14} />
@@ -162,13 +162,13 @@ export default function UserList({
       </div>
 
       {/* Footer */}
-      <div className="p-3 border-t border-gray-200 text-xs text-gray-500">
+      <div className="p-3 border-t border-gray-200 dark:border-gray-700 text-xs text-gray-500 dark:text-gray-400">
         <div className="flex items-center space-x-2">
           <Circle size={6} className="text-green-500 fill-current" />
           <span>Online</span>
         </div>
         <div className="flex items-center space-x-2 mt-1">
-          <Circle size={6} className="text-gray-300" />
+          <Circle size={6} className="text-gray-300 dark:text-gray-600" />
           <span>Offline</span>
         </div>
       </div>

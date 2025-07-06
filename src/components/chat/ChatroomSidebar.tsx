@@ -131,16 +131,16 @@ export default function ChatroomSidebar({
 
   return (
     <>
-      <div className="bg-white border-r border-gray-200 w-64 flex flex-col">
+      <div className="bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 w-64 flex flex-col transition-colors duration-200">
         {/* Header */}
-        <div className="p-4 border-b border-gray-200">
+        <div className="p-4 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-gray-900">Chatrooms</h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Chatrooms</h3>
             <div className="flex items-center space-x-2">
               {user?.is_admin && (
                 <button
                   onClick={() => setShowCreateForm(true)}
-                  className="p-1 text-blue-600 hover:bg-blue-100 rounded"
+                  className="p-1 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/20 rounded transition-colors duration-200"
                   title="Create new chatroom"
                 >
                   <Plus size={18} />
@@ -149,7 +149,7 @@ export default function ChatroomSidebar({
               {onToggleSidebar && (
                 <button
                   onClick={onToggleSidebar}
-                  className="p-1 text-gray-500 hover:bg-gray-100 rounded lg:hidden"
+                  className="p-1 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded lg:hidden transition-colors duration-200"
                   title="Close sidebar"
                 >
                   <X size={18} />
@@ -163,15 +163,15 @@ export default function ChatroomSidebar({
         <div className="flex-1 overflow-y-auto">
           {loading ? (
             <div className="p-4 text-center">
-              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div>
-              <p className="mt-2 text-sm text-gray-500">Loading...</p>
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 dark:border-blue-400 mx-auto"></div>
+              <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">Loading...</p>
             </div>
           ) : error ? (
             <div className="p-4 text-center">
-              <p className="text-red-600 text-sm mb-2">{error}</p>
+              <p className="text-red-600 dark:text-red-400 text-sm mb-2">{error}</p>
               <button
                 onClick={loadChatrooms}
-                className="text-blue-600 text-sm hover:underline"
+                className="text-blue-600 dark:text-blue-400 text-sm hover:underline"
               >
                 Retry
               </button>
@@ -181,11 +181,11 @@ export default function ChatroomSidebar({
               {/* General Chat */}
               <button
                 onClick={handleSelectGeneral}
-                className={`w-full flex items-center space-x-3 p-2 rounded-lg text-left hover:bg-gray-50 ${
-                  !selectedChatroomId ? 'bg-blue-50 text-blue-700' : 'text-gray-700'
+                className={`w-full flex items-center space-x-3 p-2 rounded-lg text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 ${
+                  !selectedChatroomId ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300' : 'text-gray-700 dark:text-gray-300'
                 }`}
               >
-                <Hash size={16} className="text-gray-500" />
+                <Hash size={16} className="text-gray-500 dark:text-gray-400" />
                 <span className="text-sm font-medium">General Chat</span>
               </button>
 
@@ -194,15 +194,15 @@ export default function ChatroomSidebar({
                 <button
                   key={chatroom.id}
                   onClick={() => handleSelectChatroom(chatroom.id)}
-                  className={`w-full flex items-center space-x-3 p-2 rounded-lg text-left hover:bg-gray-50 ${
-                    selectedChatroomId === chatroom.id ? 'bg-blue-50 text-blue-700' : 'text-gray-700'
+                  className={`w-full flex items-center space-x-3 p-2 rounded-lg text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 ${
+                    selectedChatroomId === chatroom.id ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300' : 'text-gray-700 dark:text-gray-300'
                   }`}
                 >
                   <div className="flex items-center space-x-2">
                     {chatroom.is_staff_only ? (
-                      <Crown size={16} className="text-yellow-500" />
+                      <Crown size={16} className="text-yellow-500 dark:text-yellow-400" />
                     ) : (
-                      <Hash size={16} className="text-gray-500" />
+                      <Hash size={16} className="text-gray-500 dark:text-gray-400" />
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -210,20 +210,20 @@ export default function ChatroomSidebar({
                       {chatroom.name}
                     </span>
                     {chatroom.description && (
-                      <span className="text-xs text-gray-500 truncate block">
+                      <span className="text-xs text-gray-500 dark:text-gray-400 truncate block">
                         {chatroom.description}
                       </span>
                     )}
                   </div>
                   {chatroom.is_staff_only && (
-                    <Lock size={12} className="text-gray-400" />
+                    <Lock size={12} className="text-gray-400 dark:text-gray-500" />
                   )}
                 </button>
               ))}
 
               {chatrooms.length === 0 && (
-                <div className="p-4 text-center text-gray-500">
-                  <MessageCircle size={24} className="mx-auto mb-2 text-gray-300" />
+                <div className="p-4 text-center text-gray-500 dark:text-gray-400">
+                  <MessageCircle size={24} className="mx-auto mb-2 text-gray-300 dark:text-gray-600" />
                   <p className="text-sm">No chatrooms yet</p>
                   <p className="text-xs">Create one to get started!</p>
                 </div>
@@ -236,12 +236,12 @@ export default function ChatroomSidebar({
       {/* Create Chatroom Modal */}
       {showCreateForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md mx-4">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">Create Chatroom</h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Create Chatroom</h3>
               <button
                 onClick={() => setShowCreateForm(false)}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-200"
               >
                 <X size={20} />
               </button>
@@ -249,7 +249,7 @@ export default function ChatroomSidebar({
 
             <form onSubmit={handleCreateChatroom} className="space-y-4">
               <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Name *
                 </label>
                 <input
@@ -257,7 +257,7 @@ export default function ChatroomSidebar({
                   id="name"
                   value={createForm.name}
                   onChange={(e) => setCreateForm({ ...createForm, name: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
                   placeholder="Enter chatroom name"
                   required
                   maxLength={50}
@@ -265,14 +265,14 @@ export default function ChatroomSidebar({
               </div>
 
               <div>
-                <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Description
                 </label>
                 <textarea
                   id="description"
                   value={createForm.description}
                   onChange={(e) => setCreateForm({ ...createForm, description: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
                   placeholder="Enter chatroom description"
                   rows={3}
                   maxLength={200}
@@ -286,9 +286,9 @@ export default function ChatroomSidebar({
                     id="isStaffOnly"
                     checked={createForm.isStaffOnly}
                     onChange={(e) => setCreateForm({ ...createForm, isStaffOnly: e.target.checked })}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded"
                   />
-                  <label htmlFor="isStaffOnly" className="ml-2 text-sm text-gray-700">
+                  <label htmlFor="isStaffOnly" className="ml-2 text-sm text-gray-700 dark:text-gray-300">
                     Staff only chatroom
                   </label>
                 </div>
@@ -298,14 +298,14 @@ export default function ChatroomSidebar({
                 <button
                   type="button"
                   onClick={() => setShowCreateForm(false)}
-                  className="flex-1 px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
+                  className="flex-1 px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors duration-200"
                   disabled={creating}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                  className="flex-1 px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 disabled:opacity-50 transition-colors duration-200"
                   disabled={creating || !createForm.name.trim()}
                 >
                   {creating ? 'Creating...' : 'Create'}

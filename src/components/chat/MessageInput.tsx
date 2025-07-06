@@ -93,15 +93,15 @@ export default function MessageInput({
   }, [disabled]);
 
   return (
-    <div className="border-t border-gray-200 bg-white p-4">
+    <div className="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 transition-colors duration-200">
       {/* Command help tooltip */}
       {showCommandHelp && (
-        <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm">
-          <div className="font-medium text-blue-900 mb-1">Chat Commands:</div>
-          <div className="text-blue-800 whitespace-pre-line">{getCommandHelp()}</div>
+        <div className="mb-3 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg text-sm">
+          <div className="font-medium text-blue-900 dark:text-blue-200 mb-1">Chat Commands:</div>
+          <div className="text-blue-800 dark:text-blue-300 whitespace-pre-line">{getCommandHelp()}</div>
           <button
             onClick={() => setShowCommandHelp(false)}
-            className="mt-2 text-blue-600 hover:text-blue-800 text-xs"
+            className="mt-2 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-xs"
           >
             Close
           </button>
@@ -117,7 +117,7 @@ export default function MessageInput({
             onKeyPress={handleKeyPress}
             placeholder={disabled ? "You are banned from sending messages" : "Type your message... (Press Enter to send, Shift+Enter for new line)"}
             disabled={disabled || isSubmitting}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none disabled:bg-gray-100 disabled:cursor-not-allowed"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none disabled:bg-gray-100 dark:disabled:bg-gray-800 disabled:cursor-not-allowed transition-colors duration-200 placeholder-gray-500 dark:placeholder-gray-400"
             style={{ minHeight: '40px', maxHeight: '120px' }}
             rows={1}
           />
@@ -127,7 +127,7 @@ export default function MessageInput({
         <button
           type="button"
           onClick={() => setShowCommandHelp(!showCommandHelp)}
-          className="text-gray-400 hover:text-gray-600 p-2 rounded-lg hover:bg-gray-100 transition-colors"
+          className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
           title="Show command help"
         >
           <HelpCircle size={20} />
@@ -136,7 +136,7 @@ export default function MessageInput({
         <button
           type="submit"
           disabled={!message.trim() || isSubmitting || disabled}
-          className="bg-blue-600 text-white p-2 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="bg-blue-600 dark:bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
           title="Send message"
         >
           {isSubmitting ? (
@@ -147,7 +147,7 @@ export default function MessageInput({
         </button>
       </form>
 
-      <div className="mt-2 text-xs text-gray-500">
+      <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
         Messages are encrypted end-to-end for your privacy
         {currentChatroomId && (
           <span className="ml-2">• Use &invitelink or &privateshare commands</span>
