@@ -19,6 +19,12 @@ export default function LandingPage() {
             <div className="flex items-center space-x-4">
               <ThemeToggle />
               <Link
+                href="/developers"
+                className="text-gray-600 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 px-3 py-2 rounded-lg font-medium transition-colors duration-200"
+              >
+                For Devs
+              </Link>
+              <Link
                 href="/auth"
                 className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200"
               >

@@ -33,14 +33,18 @@ CREATE INDEX IF NOT EXISTS idx_security_reports_vulnerability_type ON security_r
 -- Enable Row Level Security (RLS)
 ALTER TABLE security_reports ENABLE ROW LEVEL SECURITY;
 
--- Create RLS policies
+-- Create RLS policies (drop existing ones first to avoid conflicts)
+DROP POLICY IF EXISTS "Admins can view security reports" ON security_reports;
+DROP POLICY IF EXISTS "Admins can update security reports" ON security_reports;
+DROP POLICY IF EXISTS "Allow anonymous security report submissions" ON security_reports;
+
 -- Only admins can view security reports
 CREATE POLICY "Admins can view security reports" ON security_reports
   FOR SELECT
   USING (
     EXISTS (
-      SELECT 1 FROM users 
-      WHERE users.id = auth.uid() 
+      SELECT 1 FROM users
+      WHERE users.id = auth.uid()
       AND users.is_admin = true
     )
   );
@@ -50,8 +54,8 @@ CREATE POLICY "Admins can update security reports" ON security_reports
   FOR UPDATE
   USING (
     EXISTS (
-      SELECT 1 FROM users 
-      WHERE users.id = auth.uid() 
+      SELECT 1 FROM users
+      WHERE users.id = auth.uid()
       AND users.is_admin = true
     )
   );
