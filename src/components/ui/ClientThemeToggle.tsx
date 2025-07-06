@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { Moon, Sun } from 'lucide-react';
-import { useTheme } from '@/contexts/ThemeContext';
 
 interface ClientThemeToggleProps {
   className?: string;
@@ -11,12 +10,30 @@ interface ClientThemeToggleProps {
 
 export default function ClientThemeToggle({ className = '', showLabel = false }: ClientThemeToggleProps) {
   const [mounted, setMounted] = useState(false);
-  const { theme, toggleTheme } = useTheme();
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
 
-  // Only render after hydration to avoid SSR mismatch
+  // Initialize theme and set mounted state
   useEffect(() => {
+    const savedTheme = localStorage.getItem('schat-theme') as 'light' | 'dark';
+    const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    const initialTheme = savedTheme || systemTheme;
+
+    setTheme(initialTheme);
     setMounted(true);
   }, []);
+
+  const toggleTheme = () => {
+    const newTheme = theme === 'light' ? 'dark' : 'light';
+    setTheme(newTheme);
+
+    // Apply theme to document
+    const root = document.documentElement;
+    root.classList.remove('light', 'dark');
+    root.classList.add(newTheme);
+
+    // Save to localStorage
+    localStorage.setItem('schat-theme', newTheme);
+  };
 
   if (!mounted) {
     // Return a placeholder during SSR that matches the expected structure
