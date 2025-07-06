@@ -4,11 +4,12 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { ChatUser } from '@/types/database';
-import { Shield, Users, Activity, AlertTriangle, MessageCircle, ArrowLeft } from 'lucide-react';
+import { Shield, Users, Activity, AlertTriangle, MessageCircle, ArrowLeft, Bug } from 'lucide-react';
 import UserManagement from '@/components/admin/UserManagement';
 import SystemStatus from '@/components/admin/SystemStatus';
+import SecurityReports from '@/components/admin/SecurityReports';
 
-type TabType = 'users' | 'system' | 'logs';
+type TabType = 'users' | 'system' | 'security' | 'logs';
 
 export default function AdminDashboard() {
   const { user, loading: authLoading } = useAuth();
@@ -100,6 +101,7 @@ export default function AdminDashboard() {
   const tabs = [
     { id: 'users' as TabType, label: 'User Management', icon: Users },
     { id: 'system' as TabType, label: 'System Status', icon: Activity },
+    { id: 'security' as TabType, label: 'Security Reports', icon: Bug },
     { id: 'logs' as TabType, label: 'Admin Logs', icon: AlertTriangle },
   ];
 
@@ -180,7 +182,11 @@ export default function AdminDashboard() {
         {activeTab === 'system' && (
           <SystemStatus />
         )}
-        
+
+        {activeTab === 'security' && (
+          <SecurityReports />
+        )}
+
         {activeTab === 'logs' && (
           <div className="p-6">
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">

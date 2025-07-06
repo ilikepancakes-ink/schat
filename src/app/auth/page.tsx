@@ -1,11 +1,19 @@
 'use client';
 
 import { useAuth } from '@/contexts/AuthContext';
-import LandingPage from '@/components/landing/LandingPage';
-import ChatInterface from '@/components/chat/ChatInterface';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
+import AuthPage from '@/components/auth/AuthPage';
 
-export default function Home() {
+export default function AuthPageRoute() {
   const { user, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && user) {
+      router.push('/');
+    }
+  }, [user, loading, router]);
 
   if (loading) {
     return (
@@ -18,9 +26,9 @@ export default function Home() {
     );
   }
 
-  if (!user) {
-    return <LandingPage />;
+  if (user) {
+    return null; // Will redirect
   }
 
-  return <ChatInterface />;
+  return <AuthPage />;
 }

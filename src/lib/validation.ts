@@ -286,3 +286,86 @@ export function validatePagination(data: any): ValidationResult {
     },
   };
 }
+
+/**
+ * Validate and sanitize security report data
+ */
+export function validateSecurityReportData(data: any): ValidationResult {
+  if (!data || typeof data !== 'object') {
+    return { valid: false, error: 'Invalid data format' };
+  }
+
+  const {
+    reporterName,
+    reporterEmail,
+    vulnerabilityType,
+    severity,
+    description,
+    stepsToReproduce,
+    potentialImpact,
+    suggestedFix
+  } = data;
+
+  // Validate required fields
+  if (!vulnerabilityType || typeof vulnerabilityType !== 'string') {
+    return { valid: false, error: 'Vulnerability type is required' };
+  }
+
+  if (!severity || typeof severity !== 'string') {
+    return { valid: false, error: 'Severity level is required' };
+  }
+
+  if (!description || typeof description !== 'string' || description.trim().length < 10) {
+    return { valid: false, error: 'Description must be at least 10 characters long' };
+  }
+
+  if (!stepsToReproduce || typeof stepsToReproduce !== 'string' || stepsToReproduce.trim().length < 10) {
+    return { valid: false, error: 'Steps to reproduce must be at least 10 characters long' };
+  }
+
+  // Validate vulnerability type
+  const validVulnTypes = [
+    'xss', 'sql-injection', 'csrf', 'authentication', 'authorization',
+    'data-exposure', 'encryption', 'dos', 'other'
+  ];
+  if (!validVulnTypes.includes(vulnerabilityType)) {
+    return { valid: false, error: 'Invalid vulnerability type' };
+  }
+
+  // Validate severity
+  const validSeverities = ['critical', 'high', 'medium', 'low', 'info'];
+  if (!validSeverities.includes(severity)) {
+    return { valid: false, error: 'Invalid severity level' };
+  }
+
+  // Validate email if provided
+  if (reporterEmail && typeof reporterEmail === 'string' && reporterEmail.trim()) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(reporterEmail.trim())) {
+      return { valid: false, error: 'Invalid email format' };
+    }
+  }
+
+  // Check for malicious content in text fields
+  const textFields = [reporterName, description, stepsToReproduce, potentialImpact, suggestedFix];
+  for (const field of textFields) {
+    if (field && typeof field === 'string' && containsMaliciousContent(field)) {
+      return { valid: false, error: 'Content contains invalid characters' };
+    }
+  }
+
+  // Sanitize and return
+  return {
+    valid: true,
+    sanitized: {
+      reporterName: reporterName ? sanitizeInput(reporterName.trim()) : '',
+      reporterEmail: reporterEmail ? sanitizeInput(reporterEmail.trim()) : '',
+      vulnerabilityType: sanitizeInput(vulnerabilityType.trim()),
+      severity: sanitizeInput(severity.trim()),
+      description: sanitizeInput(description.trim()),
+      stepsToReproduce: sanitizeInput(stepsToReproduce.trim()),
+      potentialImpact: potentialImpact ? sanitizeInput(potentialImpact.trim()) : '',
+      suggestedFix: suggestedFix ? sanitizeInput(suggestedFix.trim()) : ''
+    }
+  };
+}

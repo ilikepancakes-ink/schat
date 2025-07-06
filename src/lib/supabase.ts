@@ -175,6 +175,207 @@ CREATE TABLE IF NOT EXISTS private_messages (
   is_deleted BOOLEAN DEFAULT FALSE
 );
 
+-- Security audit logs table for comprehensive security monitoring
+CREATE TABLE IF NOT EXISTS security_audit_logs (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+  event_type VARCHAR(100) NOT NULL, -- login, logout, failed_login, message_sent, admin_action, etc.
+  event_category VARCHAR(50) NOT NULL, -- authentication, authorization, data_access, admin, security
+  severity VARCHAR(20) NOT NULL DEFAULT 'info', -- critical, high, medium, low, info
+  source_ip INET,
+  user_agent TEXT,
+  session_id TEXT,
+  resource_accessed TEXT,
+  action_details JSONB,
+  risk_score INTEGER DEFAULT 0, -- 0-100 risk assessment
+  threat_indicators JSONB, -- Array of detected threat indicators
+  geolocation JSONB, -- Country, city, etc.
+  success BOOLEAN DEFAULT true,
+  error_message TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  processed BOOLEAN DEFAULT false -- For incident response processing
+);
+
+-- Security challenges table for CTF-style challenges
+CREATE TABLE IF NOT EXISTS security_challenges (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  title VARCHAR(200) NOT NULL,
+  description TEXT NOT NULL,
+  category VARCHAR(50) NOT NULL, -- web, crypto, forensics, reverse, pwn, misc
+  difficulty VARCHAR(20) NOT NULL, -- beginner, intermediate, advanced, expert
+  points INTEGER NOT NULL DEFAULT 100,
+  flag_format VARCHAR(100), -- Expected flag format (e.g., "flag{...}")
+  flag_hash TEXT NOT NULL, -- Hashed correct flag
+  hints JSONB, -- Array of hints with point deductions
+  files JSONB, -- Array of file URLs/paths for challenge
+  docker_image TEXT, -- Docker image for sandbox challenges
+  is_active BOOLEAN DEFAULT true,
+  max_attempts INTEGER DEFAULT 0, -- 0 = unlimited
+  time_limit INTEGER DEFAULT 0, -- 0 = no time limit (in minutes)
+  created_by UUID REFERENCES users(id) ON DELETE SET NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Challenge attempts and solutions
+CREATE TABLE IF NOT EXISTS challenge_attempts (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  challenge_id UUID REFERENCES security_challenges(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  submitted_flag TEXT NOT NULL,
+  is_correct BOOLEAN NOT NULL,
+  points_awarded INTEGER DEFAULT 0,
+  time_taken INTEGER, -- Time in seconds
+  hint_penalties INTEGER DEFAULT 0,
+  submission_details JSONB, -- Additional submission metadata
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE(challenge_id, user_id, created_at) -- Prevent duplicate submissions at same time
+);
+
+-- Penetration testing sandbox environments
+CREATE TABLE IF NOT EXISTS sandbox_environments (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  description TEXT,
+  environment_type VARCHAR(50) NOT NULL, -- web_app, network, mobile, api
+  docker_compose TEXT, -- Docker compose configuration
+  target_services JSONB, -- Array of services and ports
+  allowed_tools JSONB, -- Array of allowed penetration testing tools
+  restrictions JSONB, -- Security restrictions and limitations
+  max_duration INTEGER DEFAULT 3600, -- Max session time in seconds
+  is_active BOOLEAN DEFAULT true,
+  created_by UUID REFERENCES users(id) ON DELETE SET NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Sandbox sessions for tracking user practice sessions
+CREATE TABLE IF NOT EXISTS sandbox_sessions (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  environment_id UUID REFERENCES sandbox_environments(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  container_id TEXT, -- Docker container ID
+  status VARCHAR(20) DEFAULT 'starting', -- starting, running, stopped, error
+  start_time TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  end_time TIMESTAMP WITH TIME ZONE,
+  duration INTEGER, -- Actual duration in seconds
+  actions_log JSONB, -- Log of user actions in sandbox
+  findings JSONB, -- Vulnerabilities found by user
+  score INTEGER DEFAULT 0,
+  notes TEXT
+);
+
+-- Multi-factor authentication settings
+CREATE TABLE IF NOT EXISTS user_mfa_settings (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE UNIQUE,
+  totp_secret TEXT, -- TOTP secret key (encrypted)
+  backup_codes JSONB, -- Array of backup codes (hashed)
+  webauthn_credentials JSONB, -- WebAuthn/FIDO2 credentials
+  sms_phone TEXT, -- Phone number for SMS (encrypted)
+  email_backup BOOLEAN DEFAULT false,
+  is_enabled BOOLEAN DEFAULT false,
+  last_used_at TIMESTAMP WITH TIME ZONE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Security incidents and threat detection
+CREATE TABLE IF NOT EXISTS security_incidents (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  incident_type VARCHAR(100) NOT NULL, -- brute_force, suspicious_activity, data_breach, etc.
+  severity VARCHAR(20) NOT NULL, -- critical, high, medium, low
+  status VARCHAR(20) DEFAULT 'open', -- open, investigating, resolved, false_positive
+  title VARCHAR(200) NOT NULL,
+  description TEXT,
+  affected_users JSONB, -- Array of affected user IDs
+  source_ips JSONB, -- Array of source IP addresses
+  indicators JSONB, -- Threat indicators and IOCs
+  timeline JSONB, -- Timeline of events
+  response_actions JSONB, -- Actions taken in response
+  assigned_to UUID REFERENCES users(id) ON DELETE SET NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  resolved_at TIMESTAMP WITH TIME ZONE
+);
+
+-- Network monitoring and intrusion detection
+CREATE TABLE IF NOT EXISTS network_events (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  event_type VARCHAR(50) NOT NULL, -- connection, request, response, anomaly
+  source_ip INET NOT NULL,
+  destination_ip INET,
+  source_port INTEGER,
+  destination_port INTEGER,
+  protocol VARCHAR(10), -- TCP, UDP, HTTP, HTTPS
+  request_method VARCHAR(10), -- GET, POST, etc.
+  request_path TEXT,
+  response_code INTEGER,
+  bytes_transferred BIGINT,
+  user_agent TEXT,
+  referer TEXT,
+  threat_score INTEGER DEFAULT 0, -- 0-100 threat assessment
+  blocked BOOLEAN DEFAULT false,
+  rule_triggered TEXT, -- Which security rule was triggered
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Vulnerability assessment results
+CREATE TABLE IF NOT EXISTS vulnerability_scans (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  scan_type VARCHAR(50) NOT NULL, -- web_app, network, dependency, code
+  target_url TEXT,
+  target_description TEXT,
+  scan_status VARCHAR(20) DEFAULT 'pending', -- pending, running, completed, failed
+  started_by UUID REFERENCES users(id) ON DELETE SET NULL,
+  vulnerabilities_found JSONB, -- Array of vulnerabilities with details
+  scan_config JSONB, -- Scan configuration and parameters
+  raw_results JSONB, -- Raw scanner output
+  risk_summary JSONB, -- Summary of risk levels
+  recommendations JSONB, -- Remediation recommendations
+  started_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  completed_at TIMESTAMP WITH TIME ZONE,
+  duration INTEGER -- Scan duration in seconds
+);
+
+-- Security education progress tracking
+CREATE TABLE IF NOT EXISTS security_education_progress (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  module_id VARCHAR(100) NOT NULL, -- Module identifier
+  module_name VARCHAR(200) NOT NULL,
+  category VARCHAR(50) NOT NULL, -- web_security, network_security, cryptography, etc.
+  progress_percentage INTEGER DEFAULT 0,
+  completed BOOLEAN DEFAULT false,
+  quiz_scores JSONB, -- Array of quiz scores
+  time_spent INTEGER DEFAULT 0, -- Time in minutes
+  last_accessed TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  completed_at TIMESTAMP WITH TIME ZONE,
+  UNIQUE(user_id, module_id)
+);
+
+-- Security reports table for vulnerability reporting
+CREATE TABLE IF NOT EXISTS security_reports (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  reporter_name VARCHAR(100) DEFAULT 'Anonymous',
+  reporter_email VARCHAR(255),
+  vulnerability_type VARCHAR(50) NOT NULL CHECK (vulnerability_type IN (
+    'xss', 'sql-injection', 'csrf', 'authentication', 'authorization',
+    'data-exposure', 'encryption', 'dos', 'other'
+  )),
+  severity VARCHAR(20) NOT NULL CHECK (severity IN ('critical', 'high', 'medium', 'low', 'info')),
+  description TEXT NOT NULL,
+  steps_to_reproduce TEXT NOT NULL,
+  potential_impact TEXT,
+  suggested_fix TEXT,
+  status VARCHAR(20) DEFAULT 'new' CHECK (status IN ('new', 'reviewing', 'confirmed', 'fixed', 'dismissed')),
+  reviewed_by UUID REFERENCES users(id) ON DELETE SET NULL,
+  admin_notes TEXT,
+  ip_address INET,
+  submitted_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  reviewed_at TIMESTAMP WITH TIME ZONE,
+  resolved_at TIMESTAMP WITH TIME ZONE
+);
+
 -- Indexes for performance
 CREATE INDEX IF NOT EXISTS idx_messages_user_id ON messages(user_id);
 CREATE INDEX IF NOT EXISTS idx_messages_created_at ON messages(created_at DESC);
@@ -185,6 +386,25 @@ CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
 CREATE INDEX IF NOT EXISTS idx_friends_user_id ON friends(user_id);
 CREATE INDEX IF NOT EXISTS idx_friends_friend_id ON friends(friend_id);
 CREATE INDEX IF NOT EXISTS idx_friends_status ON friends(status);
+
+-- Security-focused indexes
+CREATE INDEX IF NOT EXISTS idx_security_audit_logs_user_id ON security_audit_logs(user_id);
+CREATE INDEX IF NOT EXISTS idx_security_audit_logs_event_type ON security_audit_logs(event_type);
+CREATE INDEX IF NOT EXISTS idx_security_audit_logs_severity ON security_audit_logs(severity);
+CREATE INDEX IF NOT EXISTS idx_security_audit_logs_created_at ON security_audit_logs(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_security_audit_logs_source_ip ON security_audit_logs(source_ip);
+CREATE INDEX IF NOT EXISTS idx_security_audit_logs_risk_score ON security_audit_logs(risk_score DESC);
+CREATE INDEX IF NOT EXISTS idx_challenge_attempts_user_id ON challenge_attempts(user_id);
+CREATE INDEX IF NOT EXISTS idx_challenge_attempts_challenge_id ON challenge_attempts(challenge_id);
+CREATE INDEX IF NOT EXISTS idx_sandbox_sessions_user_id ON sandbox_sessions(user_id);
+CREATE INDEX IF NOT EXISTS idx_sandbox_sessions_status ON sandbox_sessions(status);
+CREATE INDEX IF NOT EXISTS idx_security_incidents_severity ON security_incidents(severity);
+CREATE INDEX IF NOT EXISTS idx_security_incidents_status ON security_incidents(status);
+CREATE INDEX IF NOT EXISTS idx_network_events_source_ip ON network_events(source_ip);
+CREATE INDEX IF NOT EXISTS idx_network_events_threat_score ON network_events(threat_score DESC);
+CREATE INDEX IF NOT EXISTS idx_network_events_created_at ON network_events(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_vulnerability_scans_started_by ON vulnerability_scans(started_by);
+CREATE INDEX IF NOT EXISTS idx_vulnerability_scans_scan_status ON vulnerability_scans(scan_status);
 CREATE INDEX IF NOT EXISTS idx_private_messages_sender_id ON private_messages(sender_id);
 CREATE INDEX IF NOT EXISTS idx_private_messages_recipient_id ON private_messages(recipient_id);
 CREATE INDEX IF NOT EXISTS idx_private_messages_created_at ON private_messages(created_at DESC);
