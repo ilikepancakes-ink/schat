@@ -237,7 +237,8 @@ describe('Site Owner Admin Privilege Management', () => {
       });
 
       // Mock banUser function
-      const { banUser } = require('@/lib/database');
+      const databaseModule = await import('@/lib/database');
+      const banUser = databaseModule.banUser as jest.MockedFunction<typeof databaseModule.banUser>;
       banUser.mockResolvedValue({ success: true });
 
       const request = createMockRequest({

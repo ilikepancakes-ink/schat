@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
     // Get all users with basic info (not admin-only)
     const { data: users, error } = await supabaseAdmin
       .from('users')
-      .select('id, username, is_admin, is_banned, created_at')
+      .select('id, username, is_admin, is_site_owner, is_banned, created_at')
       .order('created_at', { ascending: false });
 
     if (error) {

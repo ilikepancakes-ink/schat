@@ -9,7 +9,7 @@ export async function getAllUsers(): Promise<{ success: boolean; users?: ChatUse
   try {
     const { data: users, error } = await supabaseAdmin
       .from('users')
-      .select('id, username, is_admin, is_banned, created_at')
+      .select('id, username, is_admin, is_site_owner, is_banned, created_at')
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -21,6 +21,7 @@ export async function getAllUsers(): Promise<{ success: boolean; users?: ChatUse
       id: user.id,
       username: user.username,
       is_admin: user.is_admin,
+      is_site_owner: user.is_site_owner,
       is_banned: user.is_banned,
       is_online: false, // This will be updated by Socket.IO
     }));
@@ -61,7 +62,7 @@ export async function getAllMessages(limit: number = 100): Promise<{ success: bo
     const userIds = [...new Set(messages.map(m => m.user_id))];
     const { data: users, error: userError } = await supabaseAdmin
       .from('users')
-      .select('id, username, is_admin')
+      .select('id, username, is_admin, is_site_owner')
       .in('id', userIds);
 
     if (userError) {

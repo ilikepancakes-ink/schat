@@ -41,7 +41,7 @@ export async function GET(
 
     const { data: userProfile, error: userError } = await supabaseAdmin
       .from('users')
-      .select('id, username, display_name, bio, profile_picture_url, is_admin, created_at')
+      .select('id, username, display_name, bio, profile_picture_url, is_admin, is_site_owner, created_at')
       .eq('id', userId)
       .single();
 
@@ -91,6 +91,7 @@ export async function GET(
       bio: userProfile.bio,
       profile_picture_url: userProfile.profile_picture_url,
       is_admin: userProfile.is_admin,
+      is_site_owner: userProfile.is_site_owner,
       is_online: false, // This would be updated by real-time presence
       created_at: userProfile.created_at,
       friend_status: friendStatus,

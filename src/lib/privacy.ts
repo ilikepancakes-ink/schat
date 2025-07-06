@@ -101,6 +101,7 @@ export function filterUserProfile(
       bio: null,
       profile_picture_url: null,
       is_admin: profile.is_admin,
+      is_site_owner: profile.is_site_owner,
       created_at: profile.created_at,
       isPrivate: true,
     };
