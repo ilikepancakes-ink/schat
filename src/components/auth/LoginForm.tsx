@@ -41,15 +41,15 @@ export default function LoginForm({ onSwitchToRegister }: LoginFormProps) {
   };
 
   return (
-    <div className="w-full max-w-md mx-auto bg-white rounded-lg shadow-md p-6">
+    <div className="w-full max-w-md mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 transition-colors duration-200">
       <div className="text-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">Welcome Back</h2>
-        <p className="text-gray-600 mt-2">Sign in to your account</p>
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Welcome Back</h2>
+        <p className="text-gray-600 dark:text-gray-300 mt-2">Sign in to your account</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="username" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Username
           </label>
           <input
@@ -59,13 +59,13 @@ export default function LoginForm({ onSwitchToRegister }: LoginFormProps) {
             value={formData.username}
             onChange={handleChange}
             required
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200"
             placeholder="Enter your username"
           />
         </div>
 
         <div>
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Password
           </label>
           <div className="relative">
@@ -76,13 +76,13 @@ export default function LoginForm({ onSwitchToRegister }: LoginFormProps) {
               value={formData.password}
               onChange={handleChange}
               required
-              className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 pr-10 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200"
               placeholder="Enter your password"
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+              className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
             >
               {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
             </button>
@@ -90,7 +90,7 @@ export default function LoginForm({ onSwitchToRegister }: LoginFormProps) {
         </div>
 
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md text-sm">
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-md text-sm">
             {error}
           </div>
         )}
@@ -98,7 +98,7 @@ export default function LoginForm({ onSwitchToRegister }: LoginFormProps) {
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+          className="w-full bg-blue-600 dark:bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-700 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center transition-colors duration-200"
         >
           {loading ? (
             <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
@@ -112,11 +112,11 @@ export default function LoginForm({ onSwitchToRegister }: LoginFormProps) {
       </form>
 
       <div className="mt-6 text-center">
-        <p className="text-gray-600">
+        <p className="text-gray-600 dark:text-gray-300">
           Don&apos;t have an account?{' '}
           <button
             onClick={onSwitchToRegister}
-            className="text-blue-600 hover:text-blue-700 font-medium"
+            className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium"
           >
             Sign up
           </button>
