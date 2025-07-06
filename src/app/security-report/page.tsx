@@ -19,6 +19,7 @@ export default function SecurityReportPage() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Handle theme detection and management
   useEffect(() => {
@@ -50,6 +51,12 @@ export default function SecurityReportPage() {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
+
+    // Clear error when user starts typing
+    if (error) {
+      setError(null);
+    }
+
     setFormData(prev => ({
       ...prev,
       [name]: value
@@ -59,6 +66,7 @@ export default function SecurityReportPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setError(null);
 
     try {
       const response = await fetch('/api/security-reports', {
@@ -69,7 +77,9 @@ export default function SecurityReportPage() {
         body: JSON.stringify(formData),
       });
 
-      if (response.ok) {
+      const data = await response.json();
+
+      if (response.ok && data.success) {
         setSubmitted(true);
         setFormData({
           reporterName: '',
@@ -82,11 +92,11 @@ export default function SecurityReportPage() {
           suggestedFix: ''
         });
       } else {
-        alert('Failed to submit report. Please try again.');
+        setError(data.error || 'Failed to submit report. Please try again.');
       }
     } catch (error) {
       console.error('Error submitting report:', error);
-      alert('Failed to submit report. Please try again.');
+      setError('Network error. Please check your connection and try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -111,9 +121,18 @@ export default function SecurityReportPage() {
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
             Report Submitted Successfully
           </h2>
-          <p className="text-gray-600 dark:text-gray-300 mb-6">
+          <p className="text-gray-600 dark:text-gray-300 mb-4">
             Thank you for helping us improve our security. Your report has been sent to our security team and will be reviewed promptly.
           </p>
+          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
+            <p className="text-sm text-blue-800 dark:text-blue-200">
+              <strong>What happens next?</strong><br />
+              • Our security team will review your report within 24-48 hours<br />
+              • You'll receive updates if you provided an email address<br />
+              • We may reach out for additional information if needed<br />
+              • Critical vulnerabilities are prioritized for immediate attention
+            </p>
+          </div>
           <Link
             href="/"
             className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200 inline-flex items-center"
@@ -313,9 +332,17 @@ export default function SecurityReportPage() {
               />
             </div>
 
+            {error && (
+              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                <p className="text-sm text-red-800 dark:text-red-200">
+                  <strong>Error:</strong> {error}
+                </p>
+              </div>
+            )}
+
             <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
               <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                <strong>Note:</strong> This form is for legitimate security research only. Please do not exploit any vulnerabilities you discover. 
+                <strong>Note:</strong> This form is for legitimate security research only. Please do not exploit any vulnerabilities you discover.
                 We appreciate responsible disclosure and will work with you to address any issues promptly.
               </p>
             </div>

@@ -9,6 +9,10 @@ export default function SecurityReports() {
   const [loading, setLoading] = useState(true);
   const [selectedReport, setSelectedReport] = useState<SecurityReport | null>(null);
   const [filter, setFilter] = useState<'all' | 'new' | 'reviewing' | 'confirmed' | 'fixed' | 'dismissed'>('all');
+  const [adminNotes, setAdminNotes] = useState('');
+  const [showNotesInput, setShowNotesInput] = useState(false);
+  const [updating, setUpdating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     loadReports();
@@ -25,6 +29,7 @@ export default function SecurityReports() {
         const data = await response.json();
         if (data.success) {
           setReports(data.reports || []);
+          return data.reports || [];
         }
       }
     } catch (error) {
@@ -32,30 +37,54 @@ export default function SecurityReports() {
     } finally {
       setLoading(false);
     }
+    return [];
   };
 
-  const updateReportStatus = async (reportId: string, status: string, adminNotes?: string) => {
+  const updateReportStatus = async (reportId: string, status: string, notes?: string) => {
     try {
+      setUpdating(true);
+      setError(null);
+
       const response = await fetch(`/api/admin/security-reports/${reportId}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
-        body: JSON.stringify({ status, adminNotes }),
+        body: JSON.stringify({ status, adminNotes: notes }),
       });
 
-      if (response.ok) {
+      const data = await response.json();
+
+      if (response.ok && data.success) {
         await loadReports();
-        if (selectedReport?.id === reportId) {
-          const updatedReport = reports.find(r => r.id === reportId);
+        // Refresh the selected report with updated data
+        const updatedReports = await loadReports();
+        if (selectedReport?.id === reportId && updatedReports) {
+          const updatedReport = updatedReports.find((r: SecurityReport) => r.id === reportId);
           if (updatedReport) {
-            setSelectedReport({ ...updatedReport, status: status as any, admin_notes: adminNotes });
+            setSelectedReport(updatedReport);
           }
         }
+        setAdminNotes('');
+        setShowNotesInput(false);
+      } else {
+        setError(data.error || 'Failed to update report status');
       }
     } catch (error) {
       console.error('Error updating report status:', error);
+      setError('Network error. Please try again.');
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const handleStatusUpdate = (status: string) => {
+    setError(null);
+    if (showNotesInput) {
+      updateReportStatus(selectedReport!.id, status, adminNotes);
+    } else {
+      updateReportStatus(selectedReport!.id, status);
     }
   };
 
@@ -280,19 +309,52 @@ export default function SecurityReports() {
 
               <div className="p-4 border-t border-gray-200">
                 <h4 className="font-medium text-gray-900 mb-3">Update Status</h4>
+
+                {error && (
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+                    <p className="text-sm text-red-800">{error}</p>
+                  </div>
+                )}
+
+                <div className="mb-4">
+                  <button
+                    onClick={() => setShowNotesInput(!showNotesInput)}
+                    className="text-sm text-blue-600 hover:text-blue-700 mb-2"
+                  >
+                    {showNotesInput ? 'Hide' : 'Add'} Admin Notes
+                  </button>
+
+                  {showNotesInput && (
+                    <textarea
+                      value={adminNotes}
+                      onChange={(e) => setAdminNotes(e.target.value)}
+                      placeholder="Add notes about this report..."
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                      rows={3}
+                    />
+                  )}
+                </div>
+
                 <div className="flex flex-wrap gap-2">
                   {['reviewing', 'confirmed', 'fixed', 'dismissed'].map((status) => (
                     <button
                       key={status}
-                      onClick={() => updateReportStatus(selectedReport.id, status)}
-                      disabled={selectedReport.status === status}
+                      onClick={() => handleStatusUpdate(status)}
+                      disabled={selectedReport.status === status || updating}
                       className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
-                        selectedReport.status === status
+                        selectedReport.status === status || updating
                           ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                           : 'bg-blue-600 text-white hover:bg-blue-700'
                       }`}
                     >
-                      Mark as {status.charAt(0).toUpperCase() + status.slice(1)}
+                      {updating ? (
+                        <div className="flex items-center">
+                          <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-1"></div>
+                          Updating...
+                        </div>
+                      ) : (
+                        `Mark as ${status.charAt(0).toUpperCase() + status.slice(1)}`
+                      )}
                     </button>
                   ))}
                 </div>
