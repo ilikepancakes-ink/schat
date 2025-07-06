@@ -37,13 +37,18 @@ export async function GET(
 
     // Get user profile
     console.log('📡 Querying database for user profile...');
+    console.log('📡 Query: SELECT * FROM users WHERE id =', userId);
+
     const { data: userProfile, error: userError } = await supabaseAdmin
       .from('users')
       .select('id, username, display_name, bio, profile_picture_url, is_admin, created_at')
       .eq('id', userId)
       .single();
 
-    console.log('📡 Database query result:', { userProfile, userError });
+    console.log('📡 Database query result:');
+    console.log('  - userProfile:', userProfile);
+    console.log('  - userError:', userError);
+    console.log('  - userError details:', userError?.message, userError?.code, userError?.details);
 
     if (userError || !userProfile) {
       console.log('❌ User not found in database');

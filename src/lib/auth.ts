@@ -15,6 +15,7 @@ export function generateToken(user: AuthUser): string {
       userId: user.id,
       username: user.username,
       isAdmin: user.is_admin,
+      isSiteOwner: user.is_site_owner,
       isBanned: user.is_banned,
     },
     JWT_SECRET,
@@ -32,6 +33,7 @@ export function verifyToken(token: string): AuthUser | null {
       id: decoded.userId,
       username: decoded.username,
       is_admin: decoded.isAdmin,
+      is_site_owner: decoded.isSiteOwner || false,
       is_banned: decoded.isBanned,
     };
   } catch (error) {
@@ -85,9 +87,10 @@ export async function registerUser(credentials: RegisterCredentials): Promise<{ 
         username,
         password_hash: passwordHash,
         is_admin: false,
+        is_site_owner: false,
         is_banned: false,
       })
-      .select('id, username, is_admin, is_banned')
+      .select('id, username, is_admin, is_site_owner, is_banned')
       .single();
 
     if (error) {
@@ -101,6 +104,7 @@ export async function registerUser(credentials: RegisterCredentials): Promise<{ 
         id: newUser.id,
         username: newUser.username,
         is_admin: newUser.is_admin,
+        is_site_owner: newUser.is_site_owner,
         is_banned: newUser.is_banned,
       },
     };
@@ -124,7 +128,7 @@ export async function loginUser(credentials: LoginCredentials): Promise<{ succes
     // Get user from database
     const { data: user, error } = await supabaseAdmin
       .from('users')
-      .select('id, username, password_hash, is_admin, is_banned')
+      .select('id, username, password_hash, is_admin, is_site_owner, is_banned')
       .eq('username', username)
       .single();
 
@@ -147,6 +151,7 @@ export async function loginUser(credentials: LoginCredentials): Promise<{ succes
       id: user.id,
       username: user.username,
       is_admin: user.is_admin,
+      is_site_owner: user.is_site_owner,
       is_banned: user.is_banned,
     };
 
@@ -234,7 +239,7 @@ export async function validateSession(token: string): Promise<{ valid: boolean; 
     // Get fresh user data to check for bans or role changes
     const { data: freshUser, error: userError } = await supabaseAdmin
       .from('users')
-      .select('id, username, is_admin, is_banned')
+      .select('id, username, is_admin, is_site_owner, is_banned')
       .eq('id', user.id)
       .single();
 
@@ -258,6 +263,7 @@ export async function validateSession(token: string): Promise<{ valid: boolean; 
         id: freshUser.id,
         username: freshUser.username,
         is_admin: freshUser.is_admin,
+        is_site_owner: freshUser.is_site_owner,
         is_banned: freshUser.is_banned,
       },
     };

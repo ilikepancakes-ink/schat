@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { MessageCircle, LogOut, Settings, Shield, Users, Hash, Menu } from 'lucide-react';
+import { MessageCircle, LogOut, Settings, Shield, Users, Hash, Menu, Lock } from 'lucide-react';
 
 interface ChatHeaderProps {
   onToggleUserList: () => void;
@@ -11,6 +11,7 @@ interface ChatHeaderProps {
   showChatroomSidebar: boolean;
   currentChatroomName: string;
   onOpenAdminPanel?: () => void;
+  onOpenPrivacySettings?: () => void;
 }
 
 export default function ChatHeader({
@@ -19,7 +20,8 @@ export default function ChatHeader({
   onToggleChatroomSidebar,
   showChatroomSidebar,
   currentChatroomName,
-  onOpenAdminPanel
+  onOpenAdminPanel,
+  onOpenPrivacySettings
 }: ChatHeaderProps) {
   const { user, logout } = useAuth();
   const [showDropdown, setShowDropdown] = useState(false);
@@ -44,9 +46,9 @@ export default function ChatHeader({
             <Menu size={20} />
           </button>
 
-          <MessageCircle size={24} className="text-blue-600" />
+          <MessageCircle size={24} className="text-purple-600" />
           <div className="flex items-center space-x-2">
-            <h1 className="text-xl font-bold text-gray-900">SchoolChat</h1>
+            <h1 className="text-xl font-bold text-gray-900">Schat</h1>
             <span className="text-gray-400">•</span>
             <div className="flex items-center space-x-1">
               <Hash size={16} className="text-gray-500" />
@@ -56,7 +58,7 @@ export default function ChatHeader({
             </div>
           </div>
           <span className="text-sm text-gray-500 hidden lg:inline">
-            Secure messaging
+            Ultra-private messaging
           </span>
         </div>
 
@@ -150,6 +152,16 @@ export default function ChatHeader({
                   </div>
                   
                   <div className="p-1">
+                    <button
+                      onClick={() => {
+                        onOpenPrivacySettings?.();
+                        setShowDropdown(false);
+                      }}
+                      className="w-full flex items-center px-3 py-2 text-sm text-purple-600 hover:bg-purple-50 rounded-md transition-colors"
+                    >
+                      <Lock size={16} className="mr-2" />
+                      Privacy Settings
+                    </button>
                     {user?.is_admin && (
                       <a
                         href="/admin/dashboard"

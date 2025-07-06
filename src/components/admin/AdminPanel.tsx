@@ -22,7 +22,7 @@ export default function AdminPanel({ onClose, onRefreshUsers }: AdminPanelProps)
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (user?.is_admin) {
+    if (user?.is_admin || user?.is_site_owner) {
       loadUsers();
     }
   }, [user]);
@@ -71,7 +71,7 @@ export default function AdminPanel({ onClose, onRefreshUsers }: AdminPanelProps)
     }
   };
 
-  if (!user?.is_admin) {
+  if (!user?.is_admin && !user?.is_site_owner) {
     return null;
   }
 

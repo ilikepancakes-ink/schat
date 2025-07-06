@@ -27,6 +27,7 @@ CREATE TABLE IF NOT EXISTS users (
   username VARCHAR(50) UNIQUE NOT NULL,
   password_hash TEXT NOT NULL,
   is_admin BOOLEAN DEFAULT FALSE,
+  is_site_owner BOOLEAN DEFAULT FALSE,
   is_banned BOOLEAN DEFAULT FALSE,
   profile_picture_url TEXT,
   bio TEXT,
@@ -114,6 +115,43 @@ CREATE TABLE IF NOT EXISTS admin_actions (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- User privacy settings table
+CREATE TABLE IF NOT EXISTS user_privacy_settings (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+  profile_visibility VARCHAR(20) DEFAULT 'public' CHECK (profile_visibility IN ('public', 'friends', 'private')),
+  message_retention INTEGER DEFAULT 0 CHECK (message_retention >= 0 AND message_retention <= 365),
+  allow_direct_messages BOOLEAN DEFAULT TRUE,
+  allow_friend_requests BOOLEAN DEFAULT TRUE,
+  show_online_status BOOLEAN DEFAULT TRUE,
+  data_minimization BOOLEAN DEFAULT FALSE,
+  anonymous_mode BOOLEAN DEFAULT FALSE,
+  auto_delete_messages BOOLEAN DEFAULT FALSE,
+  block_analytics BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Message reports table
+CREATE TABLE IF NOT EXISTS message_reports (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  message_id UUID REFERENCES messages(id) ON DELETE CASCADE,
+  chatroom_message_id UUID REFERENCES chatroom_messages(id) ON DELETE CASCADE,
+  private_message_id UUID REFERENCES private_messages(id) ON DELETE CASCADE,
+  reported_by UUID REFERENCES users(id) ON DELETE CASCADE,
+  reason TEXT NOT NULL,
+  status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'reviewed', 'resolved', 'dismissed')),
+  reviewed_by UUID REFERENCES users(id) ON DELETE SET NULL,
+  admin_notes TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  CONSTRAINT message_reports_one_message_type CHECK (
+    (message_id IS NOT NULL AND chatroom_message_id IS NULL AND private_message_id IS NULL) OR
+    (message_id IS NULL AND chatroom_message_id IS NOT NULL AND private_message_id IS NULL) OR
+    (message_id IS NULL AND chatroom_message_id IS NULL AND private_message_id IS NOT NULL)
+  )
+);
+
 -- Friends table
 CREATE TABLE IF NOT EXISTS friends (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -166,6 +204,8 @@ ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_sessions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE admin_actions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_privacy_settings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE message_reports ENABLE ROW LEVEL SECURITY;
 ALTER TABLE friends ENABLE ROW LEVEL SECURITY;
 ALTER TABLE private_messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE chatrooms ENABLE ROW LEVEL SECURITY;
@@ -194,13 +234,48 @@ CREATE POLICY "Users can read their own sessions" ON user_sessions
 CREATE POLICY "Users can insert their own sessions" ON user_sessions
   FOR INSERT WITH CHECK (auth.uid()::text = user_id::text);
 
--- Admin actions are read-only for admins
-CREATE POLICY "Admins can read admin actions" ON admin_actions
+-- Admin actions are read-only for mods and site owners
+CREATE POLICY "Mods and site owners can read admin actions" ON admin_actions
   FOR SELECT USING (
     EXISTS (
       SELECT 1 FROM users
       WHERE users.id::text = auth.uid()::text
-      AND users.is_admin = true
+      AND (users.is_admin = true OR users.is_site_owner = true)
+    )
+  );
+
+-- Privacy settings policies
+CREATE POLICY "Users can read their own privacy settings" ON user_privacy_settings
+  FOR SELECT USING (auth.uid()::text = user_id::text);
+
+CREATE POLICY "Users can insert their own privacy settings" ON user_privacy_settings
+  FOR INSERT WITH CHECK (auth.uid()::text = user_id::text);
+
+CREATE POLICY "Users can update their own privacy settings" ON user_privacy_settings
+  FOR UPDATE USING (auth.uid()::text = user_id::text);
+
+-- Message reports policies
+CREATE POLICY "Users can read their own reports" ON message_reports
+  FOR SELECT USING (auth.uid()::text = reported_by::text);
+
+CREATE POLICY "Mods and site owners can read all reports" ON message_reports
+  FOR SELECT USING (
+    EXISTS (
+      SELECT 1 FROM users
+      WHERE users.id::text = auth.uid()::text
+      AND (users.is_admin = true OR users.is_site_owner = true)
+    )
+  );
+
+CREATE POLICY "Users can create reports" ON message_reports
+  FOR INSERT WITH CHECK (auth.uid()::text = reported_by::text);
+
+CREATE POLICY "Mods and site owners can update reports" ON message_reports
+  FOR UPDATE USING (
+    EXISTS (
+      SELECT 1 FROM users
+      WHERE users.id::text = auth.uid()::text
+      AND (users.is_admin = true OR users.is_site_owner = true)
     )
   );
 

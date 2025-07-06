@@ -3,6 +3,7 @@ export interface User {
   username: string;
   password_hash: string;
   is_admin: boolean;
+  is_site_owner: boolean;
   is_banned: boolean;
   profile_picture_url?: string;
   bio?: string;
@@ -33,7 +34,7 @@ export interface UserSession {
 export interface AdminAction {
   id: string;
   admin_id: string;
-  action_type: 'ban_user' | 'unban_user' | 'delete_message' | 'grant_admin' | 'revoke_admin';
+  action_type: 'ban_user' | 'unban_user' | 'delete_message' | 'grant_admin' | 'revoke_admin' | 'grant_site_owner' | 'revoke_site_owner';
   target_user_id?: string;
   target_message_id?: string;
   reason?: string;
@@ -44,6 +45,7 @@ export interface ChatUser {
   id: string;
   username: string;
   is_admin: boolean;
+  is_site_owner: boolean;
   is_banned: boolean;
   is_online: boolean;
   profile_picture_url?: string;
@@ -64,6 +66,7 @@ export interface AuthUser {
   id: string;
   username: string;
   is_admin: boolean;
+  is_site_owner: boolean;
   is_banned: boolean;
   profile_picture_url?: string;
   display_name?: string;
@@ -96,6 +99,7 @@ export interface UserProfile {
   bio?: string;
   profile_picture_url?: string;
   is_admin: boolean;
+  is_site_owner: boolean;
   is_online: boolean;
   created_at: string;
   friend_status?: 'none' | 'pending_sent' | 'pending_received' | 'accepted' | 'blocked';
@@ -165,4 +169,22 @@ export interface ChatroomInvite {
   updated_at: string;
   chatroom_name?: string;
   invited_by_username?: string;
+}
+
+export interface MessageReport {
+  id: string;
+  message_id?: string;
+  chatroom_message_id?: string;
+  private_message_id?: string;
+  reported_by: string;
+  reason: string;
+  status: 'pending' | 'reviewed' | 'resolved' | 'dismissed';
+  reviewed_by?: string;
+  admin_notes?: string;
+  created_at: string;
+  updated_at: string;
+  reporter_username?: string;
+  reviewer_username?: string;
+  message_content?: string;
+  chatroom_name?: string;
 }

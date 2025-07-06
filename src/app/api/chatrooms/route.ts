@@ -26,50 +26,78 @@ export async function GET(request: NextRequest) {
     }
 
     const userId = authResult.user.id;
+    const isMod = authResult.user.is_admin || authResult.user.is_site_owner;
 
-    console.log('Fetching chatrooms for user:', userId);
+    console.log('Fetching chatrooms for user:', userId, 'isMod:', isMod);
 
-    // First, get the user's memberships
-    const { data: memberships, error: membershipError } = await supabaseAdmin
-      .from('chatroom_members')
-      .select('chatroom_id')
-      .eq('user_id', userId);
+    let chatrooms;
+    let error;
 
-    if (membershipError) {
-      console.error('Membership fetch error:', membershipError);
-      return NextResponse.json({
-        success: false,
-        error: `Failed to fetch memberships: ${membershipError.message}`,
-      }, { status: 500 });
-    }
+    if (isMod) {
+      // Mods can see ALL chatrooms
+      const { data: allChatrooms, error: allChatroomsError } = await supabaseAdmin
+        .from('chatrooms')
+        .select(`
+          id,
+          name,
+          description,
+          created_by,
+          is_default,
+          is_staff_only,
+          invite_code,
+          created_at,
+          updated_at
+        `)
+        .order('created_at', { ascending: true });
 
-    const memberChatroomIds = memberships?.map(m => m.chatroom_id) || [];
-    console.log('User is member of chatrooms:', memberChatroomIds);
-
-    // Get all chatrooms the user has access to (member of OR default)
-    let query = supabaseAdmin
-      .from('chatrooms')
-      .select(`
-        id,
-        name,
-        description,
-        created_by,
-        is_default,
-        is_staff_only,
-        invite_code,
-        created_at,
-        updated_at
-      `);
-
-    // If user has memberships, include those chatrooms OR default chatrooms
-    if (memberChatroomIds.length > 0) {
-      query = query.or(`id.in.(${memberChatroomIds.join(',')}),is_default.eq.true`);
+      chatrooms = allChatrooms;
+      error = allChatroomsError;
     } else {
-      // If no memberships, just get default chatrooms
-      query = query.eq('is_default', true);
-    }
+      // Regular users only see chatrooms they're members of OR default chatrooms
+      // First, get the user's memberships
+      const { data: memberships, error: membershipError } = await supabaseAdmin
+        .from('chatroom_members')
+        .select('chatroom_id')
+        .eq('user_id', userId);
 
-    const { data: chatrooms, error } = await query.order('created_at', { ascending: true });
+      if (membershipError) {
+        console.error('Membership fetch error:', membershipError);
+        return NextResponse.json({
+          success: false,
+          error: `Failed to fetch memberships: ${membershipError.message}`,
+        }, { status: 500 });
+      }
+
+      const memberChatroomIds = memberships?.map(m => m.chatroom_id) || [];
+      console.log('User is member of chatrooms:', memberChatroomIds);
+
+      // Get all chatrooms the user has access to (member of OR default)
+      let query = supabaseAdmin
+        .from('chatrooms')
+        .select(`
+          id,
+          name,
+          description,
+          created_by,
+          is_default,
+          is_staff_only,
+          invite_code,
+          created_at,
+          updated_at
+        `);
+
+      // If user has memberships, include those chatrooms OR default chatrooms
+      if (memberChatroomIds.length > 0) {
+        query = query.or(`id.in.(${memberChatroomIds.join(',')}),is_default.eq.true`);
+      } else {
+        // If no memberships, just get default chatrooms
+        query = query.eq('is_default', true);
+      }
+
+      const { data: userChatrooms, error: userChatroomsError } = await query.order('created_at', { ascending: true });
+      chatrooms = userChatrooms;
+      error = userChatroomsError;
+    }
 
     if (error) {
       console.error('Chatrooms fetch error:', error);

@@ -11,6 +11,7 @@ import ChatroomSidebar from './ChatroomSidebar';
 import AdminPanel from '../admin/AdminPanel';
 import UserProfile from '../profile/UserProfile';
 import InviteNotifications from './InviteNotifications';
+import PrivacySettings from '../privacy/PrivacySettings';
 import { UserProfile as UserProfileType } from '@/types/database';
 import { apiClient } from '@/lib/api-client';
 
@@ -29,6 +30,7 @@ export default function ChatInterface() {
   const [selectedProfile, setSelectedProfile] = useState<UserProfileType | null>(null);
   const [pendingInvites, setPendingInvites] = useState<ChatroomInvite[]>([]);
   const [showInviteNotifications, setShowInviteNotifications] = useState(false);
+  const [showPrivacySettings, setShowPrivacySettings] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Scroll to bottom of messages
@@ -478,6 +480,7 @@ export default function ChatInterface() {
         showChatroomSidebar={showChatroomSidebar}
         currentChatroomName={getCurrentChatroomName()}
         onOpenAdminPanel={() => setShowAdminPanel(true)}
+        onOpenPrivacySettings={() => setShowPrivacySettings(true)}
       />
 
       {/* Main content */}
@@ -555,6 +558,13 @@ export default function ChatInterface() {
         </>
       )}
 
+      {/* Privacy Settings Modal */}
+      {showPrivacySettings && (
+        <PrivacySettings
+          onClose={() => setShowPrivacySettings(false)}
+        />
+      )}
+
       {/* Invite Notifications */}
       {showInviteNotifications && pendingInvites.length > 0 && (
         <InviteNotifications
@@ -566,3 +576,4 @@ export default function ChatInterface() {
     </div>
   );
 }
+ 

@@ -6,10 +6,10 @@ import { AuthProvider } from '@/contexts/AuthContext';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'SchoolChat - Secure Messaging Platform',
-  description: 'A secure, encrypted chat platform with admin controls and user management.',
-  keywords: 'chat, messaging, secure, encrypted, school, communication',
-  authors: [{ name: 'SchoolChat Team' }],
+  title: 'Schat - Ultra-Private Messaging Platform',
+  description: 'The most privacy-focused encrypted chat platform with zero-knowledge architecture and complete user control.',
+  keywords: 'chat, messaging, secure, encrypted, private, privacy, zero-knowledge, anonymous',
+  authors: [{ name: 'Schat Privacy Team' }],
   viewport: 'width=device-width, initial-scale=1',
 };
 

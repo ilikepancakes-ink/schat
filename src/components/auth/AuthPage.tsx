@@ -14,10 +14,10 @@ export default function AuthPage() {
         {/* Header */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-4">
-            <MessageCircle size={48} className="text-blue-600" />
+            <MessageCircle size={48} className="text-purple-600" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900">SchoolChat</h1>
-          <p className="text-gray-600 mt-2">Secure messaging platform</p>
+          <h1 className="text-3xl font-bold text-gray-900">Schat</h1>
+          <p className="text-gray-600 mt-2">Ultra-private messaging platform</p>
         </div>
 
         {/* Auth Forms */}
@@ -29,7 +29,7 @@ export default function AuthPage() {
 
         {/* Footer */}
         <div className="text-center mt-8 text-sm text-gray-500">
-          <p>Secure • Encrypted • Private</p>
+          <p>Zero-Knowledge • End-to-End Encrypted • Privacy-First</p>
         </div>
       </div>
     </div>

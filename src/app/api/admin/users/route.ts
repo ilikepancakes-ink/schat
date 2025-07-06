@@ -23,10 +23,10 @@ export async function GET(request: NextRequest) {
       }, { status: 401 });
     }
 
-    if (!sessionResult.user.is_admin) {
+    if (!sessionResult.user.is_admin && !sessionResult.user.is_site_owner) {
       return NextResponse.json({
         success: false,
-        error: 'Admin privileges required',
+        error: 'Admin or site owner privileges required',
       }, { status: 403 });
     }
 
@@ -72,10 +72,10 @@ export async function POST(request: NextRequest) {
       }, { status: 401 });
     }
 
-    if (!sessionResult.user.is_admin) {
+    if (!sessionResult.user.is_admin && !sessionResult.user.is_site_owner) {
       return NextResponse.json({
         success: false,
-        error: 'Admin privileges required',
+        error: 'Admin or site owner privileges required',
       }, { status: 403 });
     }
 
@@ -92,8 +92,16 @@ export async function POST(request: NextRequest) {
 
     const { action, userId, reason } = validation.sanitized!;
 
+    // Check if action requires site owner privileges
+    if ((action === 'grant_admin' || action === 'revoke_admin') && !sessionResult.user.is_site_owner) {
+      return NextResponse.json({
+        success: false,
+        error: 'Site owner privileges required for admin management',
+      }, { status: 403 });
+    }
+
     let result;
-    
+
     switch (action) {
       case 'ban':
         result = await banUser(userId, sessionResult.user.id, reason);

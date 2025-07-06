@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { ChatUser } from '@/types/database';
 import { Shield, Ban, UserCheck, UserX, Crown, MoreVertical, RefreshCw } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface UserManagementProps {
   users: ChatUser[];
@@ -12,6 +13,7 @@ interface UserManagementProps {
 }
 
 export default function UserManagement({ users, loading, onUserAction, onRefresh }: UserManagementProps) {
+  const { user: currentUser } = useAuth();
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
 
@@ -46,16 +48,25 @@ export default function UserManagement({ users, loading, onUserAction, onRefresh
         </span>
       );
     }
-    
+
+    if (user.is_site_owner) {
+      return (
+        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+          <Crown size={10} className="mr-1" />
+          Site Owner
+        </span>
+      );
+    }
+
     if (user.is_admin) {
       return (
         <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
           <Shield size={10} className="mr-1" />
-          Admin
+          Mod
         </span>
       );
     }
-    
+
     return (
       <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
         User
@@ -99,16 +110,22 @@ export default function UserManagement({ users, loading, onUserAction, onRefresh
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
         <div className="bg-blue-50 p-4 rounded-lg">
           <div className="text-2xl font-bold text-blue-600">{users.length}</div>
           <div className="text-sm text-blue-600">Total Users</div>
+        </div>
+        <div className="bg-purple-50 p-4 rounded-lg">
+          <div className="text-2xl font-bold text-purple-600">
+            {users.filter(u => u.is_site_owner).length}
+          </div>
+          <div className="text-sm text-purple-600">Site Owners</div>
         </div>
         <div className="bg-green-50 p-4 rounded-lg">
           <div className="text-2xl font-bold text-green-600">
             {users.filter(u => u.is_admin).length}
           </div>
-          <div className="text-sm text-green-600">Admins</div>
+          <div className="text-sm text-green-600">Mods</div>
         </div>
         <div className="bg-red-50 p-4 rounded-lg">
           <div className="text-2xl font-bold text-red-600">
@@ -222,23 +239,25 @@ export default function UserManagement({ users, loading, onUserAction, onRefresh
                                 </button>
                               )}
 
-                              {/* Grant/Revoke Admin */}
-                              {user.is_admin ? (
-                                <button
-                                  onClick={() => handleUserAction('revoke_admin', user.id, user.username)}
-                                  className="w-full flex items-center px-3 py-2 text-sm text-orange-600 hover:bg-orange-50 rounded-md"
-                                >
-                                  <Crown size={16} className="mr-2" />
-                                  Revoke Admin
-                                </button>
-                              ) : (
-                                <button
-                                  onClick={() => handleUserAction('grant_admin', user.id, user.username)}
-                                  className="w-full flex items-center px-3 py-2 text-sm text-blue-600 hover:bg-blue-50 rounded-md"
-                                >
-                                  <Crown size={16} className="mr-2" />
-                                  Grant Admin
-                                </button>
+                              {/* Grant/Revoke Admin - Only for Site Owners */}
+                              {currentUser?.is_site_owner && !user.is_site_owner && (
+                                user.is_admin ? (
+                                  <button
+                                    onClick={() => handleUserAction('revoke_admin', user.id, user.username)}
+                                    className="w-full flex items-center px-3 py-2 text-sm text-orange-600 hover:bg-orange-50 rounded-md"
+                                  >
+                                    <Crown size={16} className="mr-2" />
+                                    Revoke Mod
+                                  </button>
+                                ) : (
+                                  <button
+                                    onClick={() => handleUserAction('grant_admin', user.id, user.username)}
+                                    className="w-full flex items-center px-3 py-2 text-sm text-blue-600 hover:bg-blue-50 rounded-md"
+                                  >
+                                    <Crown size={16} className="mr-2" />
+                                    Grant Mod
+                                  </button>
+                                )
                               )}
                             </div>
                           </div>
