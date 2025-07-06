@@ -584,10 +584,14 @@ export default function ApiDocumentation() {
                         <code className="text-gray-900 dark:text-gray-100 font-mono">{endpoint.path}</code>
                         <span className="text-gray-600 dark:text-gray-300">{endpoint.description}</span>
                         {endpoint.auth && (
-                          <Lock className="h-4 w-4 text-yellow-500" title="Authentication required" />
+                          <div title="Authentication required">
+                            <Lock className="h-4 w-4 text-yellow-500" />
+                          </div>
                         )}
                         {endpoint.adminOnly && (
-                          <Shield className="h-4 w-4 text-red-500" title="Admin only" />
+                          <div title="Admin only">
+                            <Shield className="h-4 w-4 text-red-500" />
+                          </div>
                         )}
                       </div>
                       {isExpanded ? (
