@@ -1,7 +1,7 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowLeft, MessageCircle, Book } from 'lucide-react';
-import ThemeToggle from '@/components/ui/ThemeToggle';
+import ClientThemeToggle from '@/components/ui/ClientThemeToggle';
 
 export const metadata: Metadata = {
   title: {
@@ -40,7 +40,7 @@ export default function DocsLayout({
               >
                 Developer Hub
               </Link>
-              <ThemeToggle />
+              <ClientThemeToggle />
               <Link
                 href="/auth"
                 className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200"

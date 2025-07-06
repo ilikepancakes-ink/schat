@@ -1,7 +1,7 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowLeft, MessageCircle } from 'lucide-react';
-import ThemeToggle from '@/components/ui/ThemeToggle';
+import ClientThemeToggle from '@/components/ui/ClientThemeToggle';
 
 export const metadata: Metadata = {
   title: {
@@ -41,7 +41,7 @@ export default function DevelopersLayout({
               >
                 API Docs
               </Link>
-              <ThemeToggle />
+              <ClientThemeToggle />
               <Link
                 href="/auth"
                 className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200"
