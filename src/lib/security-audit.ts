@@ -64,8 +64,8 @@ function calculateRiskScore(entry: AuditLogEntry): number {
       'sqlmap', 'nikto', 'nmap', 'burp', 'zap', 'metasploit',
       'curl', 'wget', 'python-requests', 'scanner'
     ];
-    if (suspiciousPatterns.some(pattern => 
-      entry.user_agent.toLowerCase().includes(pattern))) {
+    if (entry.user_agent && suspiciousPatterns.some(pattern =>
+      entry.user_agent!.toLowerCase().includes(pattern))) {
       score += 20;
     }
   }

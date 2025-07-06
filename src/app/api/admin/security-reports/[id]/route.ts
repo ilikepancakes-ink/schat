@@ -7,11 +7,13 @@ export const runtime = 'nodejs';
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id: reportId } = await params;
+
   try {
     const token = request.cookies.get('auth-token')?.value;
-    
+
     if (!token) {
       return NextResponse.json({
         success: false,
@@ -20,7 +22,7 @@ export async function PATCH(
     }
 
     const sessionResult = await validateSession(token);
-    
+
     if (!sessionResult.valid || !sessionResult.user) {
       return NextResponse.json({
         success: false,
@@ -37,7 +39,6 @@ export async function PATCH(
     }
 
     const { status, adminNotes } = await request.json();
-    const reportId = params.id;
 
     // Validate status
     const validStatuses = ['new', 'reviewing', 'confirmed', 'fixed', 'dismissed'];
@@ -143,7 +144,7 @@ export async function PATCH(
     try {
       await sendDiscordWebhook({
         title: '❌ Security Report Update Error',
-        description: `Error updating security report ${params.id}`,
+        description: `Error updating security report ${reportId}`,
         color: 0xFF0000,
         fields: [
           {
@@ -153,7 +154,7 @@ export async function PATCH(
           },
           {
             name: 'Path',
-            value: `/api/admin/security-reports/${params.id}`,
+            value: `/api/admin/security-reports/${reportId}`,
             inline: true
           },
           {

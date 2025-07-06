@@ -7,11 +7,11 @@ export const runtime = 'nodejs';
 // POST /api/security/sandbox/sessions/[id]/stop - Stop a sandbox session
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const token = request.cookies.get('auth-token')?.value;
-    
+
     if (!token) {
       return NextResponse.json({
         success: false,
@@ -27,7 +27,7 @@ export async function POST(
       }, { status: 401 });
     }
 
-    const sessionId = params.id;
+    const { id: sessionId } = await params;
     const sourceIp = request.headers.get('x-forwarded-for') || 
                     request.headers.get('x-real-ip') || 
                     'unknown';

@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
     
     // Validate the security report data
     const validation = validateSecurityReportData(body);
-    if (!validation.isValid) {
+    if (!validation.valid) {
       return NextResponse.json({
         success: false,
         error: validation.error,
