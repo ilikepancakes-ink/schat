@@ -187,15 +187,13 @@ export default function ChatroomSidebar({
               >
                 <Users size={18} />
               </button>
-              {user?.is_admin && (
-                <button
-                  onClick={() => setShowCreateForm(true)}
-                  className="p-1 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/20 rounded transition-colors duration-200"
-                  title="Create new chatroom"
-                >
-                  <Plus size={18} />
-                </button>
-              )}
+              <button
+                onClick={() => setShowCreateForm(true)}
+                className="p-1 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/20 rounded transition-colors duration-200"
+                title="Create new chatroom"
+              >
+                <Plus size={18} />
+              </button>
               {onToggleSidebar && (
                 <button
                   onClick={onToggleSidebar}

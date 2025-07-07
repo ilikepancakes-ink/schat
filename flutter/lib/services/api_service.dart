@@ -152,6 +152,25 @@ class ApiService {
     }
   }
 
+  static Future<Map<String, dynamic>> createChatroom(String name, String description, bool isStaffOnly, String token) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/chatrooms'),
+        headers: _getHeaders(token: token),
+        body: jsonEncode({
+          'name': name,
+          'description': description,
+          'is_staff_only': isStaffOnly,
+        }),
+      );
+
+      return jsonDecode(response.body);
+    } catch (e) {
+      debugPrint('Create chatroom error: $e');
+      return {'success': false, 'error': 'Network error'};
+    }
+  }
+
   // User Profile
   static Future<Map<String, dynamic>> getUserProfile(String userId, String token) async {
     try {

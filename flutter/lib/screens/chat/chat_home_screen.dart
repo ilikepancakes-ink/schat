@@ -112,9 +112,14 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
                       ),
                       const Spacer(),
                       IconButton(
-                        icon: const Icon(Icons.add),
+                        icon: const Icon(Icons.group_add),
                         onPressed: _showJoinChatroomDialog,
                         tooltip: 'Join Chatroom',
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.add),
+                        onPressed: _showCreateChatroomDialog,
+                        tooltip: 'Create Chatroom',
                       ),
                     ],
                   ),
@@ -289,6 +294,116 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(result['error'] ?? 'Failed to join chatroom'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  void _showCreateChatroomDialog() {
+    final nameController = TextEditingController();
+    final descriptionController = TextEditingController();
+    bool isStaffOnly = false;
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: const Text('Create Chatroom'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameController,
+                decoration: const InputDecoration(
+                  labelText: 'Chatroom Name',
+                  hintText: 'Enter chatroom name',
+                ),
+                maxLength: 100,
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: descriptionController,
+                decoration: const InputDecoration(
+                  labelText: 'Description',
+                  hintText: 'Enter chatroom description',
+                ),
+                maxLines: 3,
+                maxLength: 200,
+              ),
+              Consumer<AuthProvider>(
+                builder: (context, authProvider, child) {
+                  if (authProvider.user?.isAdmin == true) {
+                    return CheckboxListTile(
+                      title: const Text('Staff Only'),
+                      subtitle: const Text('Only staff members can join'),
+                      value: isStaffOnly,
+                      onChanged: (value) {
+                        setState(() {
+                          isStaffOnly = value ?? false;
+                        });
+                      },
+                    );
+                  }
+                  return const SizedBox.shrink();
+                },
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () => _createChatroom(
+                nameController.text.trim(),
+                descriptionController.text.trim(),
+                isStaffOnly,
+              ),
+              child: const Text('Create'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _createChatroom(String name, String description, bool isStaffOnly) async {
+    if (name.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Chatroom name is required'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    Navigator.of(context).pop(); // Close dialog
+
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final chatProvider = Provider.of<ChatProvider>(context, listen: false);
+
+    if (authProvider.token != null) {
+      final result = await ApiService.createChatroom(name, description, isStaffOnly, authProvider.token!);
+
+      if (result['success'] == true) {
+        // Reload chatrooms
+        await chatProvider.loadChatrooms(authProvider.token!);
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(result['message'] ?? 'Chatroom created successfully')),
+          );
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(result['error'] ?? 'Failed to create chatroom'),
               backgroundColor: Colors.red,
             ),
           );
