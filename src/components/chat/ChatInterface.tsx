@@ -356,6 +356,13 @@ export default function ChatInterface() {
         try {
           const errorData = await response.json();
           errorMessage = errorData.error || errorMessage;
+
+          // If user not found, try refreshing the user list
+          if (response.status === 404 && errorMessage.includes('User not found')) {
+            console.log('🔄 User not found, refreshing user list...');
+            await loadUsers();
+            errorMessage = 'User not found. User list has been refreshed.';
+          }
         } catch (e) {
           console.log('Could not parse error response as JSON');
         }

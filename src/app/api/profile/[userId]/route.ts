@@ -65,6 +65,13 @@ export async function GET(
 
     if (userError || !userProfile) {
       console.log('❌ User not found in database');
+      console.log('❌ Specific error details:', {
+        error: userError,
+        code: userError?.code,
+        message: userError?.message,
+        details: userError?.details,
+        hint: userError?.hint
+      });
 
       // Let's also try to see what users exist in the database
       const { data: allUsers, error: allUsersError } = await supabaseAdmin
@@ -72,8 +79,18 @@ export async function GET(
         .select('id, username')
         .limit(10);
 
-      console.log('📡 Sample users in database:', allUsers);
+      console.log('📡 Sample users in database:', allUsers?.map(u => ({ id: u.id, username: u.username })));
       console.log('📡 Sample users error:', allUsersError);
+
+      // Check if any user ID starts with the same prefix
+      const userIdPrefix = userId.substring(0, 8);
+      const { data: similarUsers } = await supabaseAdmin
+        .from('users')
+        .select('id, username')
+        .ilike('id', `${userIdPrefix}%`)
+        .limit(5);
+
+      console.log('📡 Users with similar ID prefix:', similarUsers?.map(u => ({ id: u.id, username: u.username })));
 
       return NextResponse.json({
         success: false,

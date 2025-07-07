@@ -43,7 +43,19 @@ export async function GET(request: NextRequest) {
     console.log('🔍 Found users:', users?.length || 0);
     console.log('🔍 Sample user IDs from database:', users?.slice(0, 3).map(u => ({ id: u.id, username: u.username, idType: typeof u.id })));
 
-    const chatUsers = users.map(user => ({
+    // Validate that all users have proper UUIDs
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    const validUsers = users.filter(user => {
+      const isValid = user.id && uuidRegex.test(user.id) && user.username;
+      if (!isValid) {
+        console.log('⚠️ Filtering out invalid user:', { id: user.id, username: user.username });
+      }
+      return isValid;
+    });
+
+    console.log('🔍 Valid users after filtering:', validUsers?.length || 0);
+
+    const chatUsers = validUsers.map(user => ({
       id: user.id,
       username: user.username,
       is_admin: user.is_admin,
