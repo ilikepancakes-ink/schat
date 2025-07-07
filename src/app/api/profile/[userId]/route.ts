@@ -65,6 +65,16 @@ export async function GET(
 
     if (userError || !userProfile) {
       console.log('❌ User not found in database');
+
+      // Let's also try to see what users exist in the database
+      const { data: allUsers, error: allUsersError } = await supabaseAdmin
+        .from('users')
+        .select('id, username')
+        .limit(10);
+
+      console.log('📡 Sample users in database:', allUsers);
+      console.log('📡 Sample users error:', allUsersError);
+
       return NextResponse.json({
         success: false,
         error: 'User not found',

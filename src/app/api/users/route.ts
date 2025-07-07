@@ -41,6 +41,7 @@ export async function GET(request: NextRequest) {
     }
 
     console.log('🔍 Found users:', users?.length || 0);
+    console.log('🔍 Sample user IDs from database:', users?.slice(0, 3).map(u => ({ id: u.id, username: u.username, idType: typeof u.id })));
 
     const chatUsers = users.map(user => ({
       id: user.id,
@@ -49,6 +50,8 @@ export async function GET(request: NextRequest) {
       is_banned: user.is_banned,
       is_online: false, // This will be updated by real-time features later
     }));
+
+    console.log('🔍 Sample chat user IDs being returned:', chatUsers?.slice(0, 3).map(u => ({ id: u.id, username: u.username, idType: typeof u.id })));
 
     return NextResponse.json({
       success: true,
