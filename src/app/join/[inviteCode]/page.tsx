@@ -41,7 +41,7 @@ export default function JoinChatroomPage() {
 
   const fetchChatroomPreview = async () => {
     try {
-      const response = await apiClient.get(`/api/chatrooms/join?inviteCode=${inviteCode}`, {
+      const response = await apiClient.get(`/api/chatrooms/join?code=${inviteCode}`, {
         credentials: 'include',
       });
 
