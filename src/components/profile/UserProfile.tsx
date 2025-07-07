@@ -3,12 +3,13 @@
 import React, { useState, useRef } from 'react';
 import { UserProfile as UserProfileType } from '@/types/database';
 import { useAuth } from '@/contexts/AuthContext';
-import { 
-  X, 
-  MessageCircle, 
-  UserPlus, 
-  UserMinus, 
-  Shield, 
+import { apiRequest } from '@/lib/api-client';
+import {
+  X,
+  MessageCircle,
+  UserPlus,
+  UserMinus,
+  Shield,
   Calendar,
   Camera,
   Edit3,
@@ -90,7 +91,7 @@ export default function UserProfile({
       const formData = new FormData();
       formData.append('image', file);
 
-      const response = await fetch('/api/profile/upload-image', {
+      const response = await apiRequest('/api/profile/upload-image', {
         method: 'POST',
         credentials: 'include',
         body: formData,

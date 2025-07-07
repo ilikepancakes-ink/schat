@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
+import { apiRequest } from '@/lib/api-client';
 import { ChatUser } from '@/types/database';
 import { Shield, Users, Activity, AlertTriangle, MessageCircle, ArrowLeft, Bug } from 'lucide-react';
 import UserManagement from '@/components/admin/UserManagement';
@@ -36,7 +37,7 @@ export default function AdminDashboard() {
 
   const loadUsers = async () => {
     try {
-      const response = await fetch('/api/admin/users', {
+      const response = await apiRequest('/api/admin/users', {
         credentials: 'include',
       });
       
@@ -55,7 +56,7 @@ export default function AdminDashboard() {
 
   const handleUserAction = async (action: string, userId: string, reason?: string) => {
     try {
-      const response = await fetch('/api/admin/users', {
+      const response = await apiRequest('/api/admin/users', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

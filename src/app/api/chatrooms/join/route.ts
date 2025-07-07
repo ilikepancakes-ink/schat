@@ -195,7 +195,7 @@ export async function GET(request: NextRequest) {
         description: chatroom.description,
         is_staff_only: chatroom.is_staff_only,
         created_at: chatroom.created_at,
-        created_by_username: (chatroom.users as any).username,
+        users: chatroom.users || null,
         member_count: totalMembers,
         is_already_member: isAlreadyMember,
         can_join: !isAlreadyMember && (!chatroom.is_staff_only || authResult.user.is_admin),

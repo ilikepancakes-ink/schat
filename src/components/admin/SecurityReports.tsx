@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { SecurityReport } from '@/types/database';
+import { apiRequest } from '@/lib/api-client';
 import { Bug, AlertTriangle, Shield, Clock, CheckCircle, XCircle, Eye, MessageSquare } from 'lucide-react';
 
 export default function SecurityReports() {
@@ -21,7 +22,7 @@ export default function SecurityReports() {
   const loadReports = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/admin/security-reports', {
+      const response = await apiRequest('/api/admin/security-reports', {
         credentials: 'include',
       });
 
@@ -45,7 +46,7 @@ export default function SecurityReports() {
       setUpdating(true);
       setError(null);
 
-      const response = await fetch(`/api/admin/security-reports/${reportId}`, {
+      const response = await apiRequest(`/api/admin/security-reports/${reportId}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

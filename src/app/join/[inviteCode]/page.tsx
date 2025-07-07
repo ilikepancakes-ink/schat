@@ -12,9 +12,9 @@ interface ChatroomPreview {
   description: string;
   is_staff_only: boolean;
   created_at: string;
-  users: {
-    username: string;
-    display_name: string;
+  users?: {
+    username?: string;
+    display_name?: string;
   };
 }
 
@@ -144,7 +144,7 @@ export default function JoinChatroomPage() {
           <div className="space-y-2 text-sm text-gray-500">
             <div className="flex items-center">
               <User size={16} className="mr-2" />
-              Created by {chatroom.users.display_name || chatroom.users.username}
+              Created by {chatroom.users?.display_name || chatroom.users?.username || 'Unknown User'}
             </div>
             
             <div className="flex items-center">
