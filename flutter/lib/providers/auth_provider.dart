@@ -33,7 +33,10 @@ class AuthProvider with ChangeNotifier {
         if (isValid) {
           _isAuthenticated = true;
           // Load user data
-          _user = await ApiService.getCurrentUser(storedToken);
+          final userData = await ApiService.getCurrentUser(storedToken);
+          if (userData != null) {
+            _user = User.fromJson(userData);
+          }
         } else {
           await _clearAuth();
         }

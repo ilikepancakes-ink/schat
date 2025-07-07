@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/chat_provider.dart';
 import '../../models/chatroom.dart';
+import '../../services/api_service.dart';
 import 'chat_room_screen.dart';
 
 class ChatHomeScreen extends StatefulWidget {

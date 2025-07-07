@@ -12,6 +12,7 @@ import AdminPanel from '../admin/AdminPanel';
 import UserProfile from '../profile/UserProfile';
 import InviteNotifications from './InviteNotifications';
 import PrivacySettings from '../privacy/PrivacySettings';
+import InviteCodeDisplay from './InviteCodeDisplay';
 import { UserProfile as UserProfileType } from '@/types/database';
 import { apiClient } from '@/lib/api-client';
 
@@ -31,6 +32,7 @@ export default function ChatInterface() {
   const [pendingInvites, setPendingInvites] = useState<ChatroomInvite[]>([]);
   const [showInviteNotifications, setShowInviteNotifications] = useState(false);
   const [showPrivacySettings, setShowPrivacySettings] = useState(false);
+  const [currentChatroom, setCurrentChatroom] = useState<any>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Scroll to bottom of messages
@@ -428,11 +430,37 @@ export default function ChatInterface() {
     }
   };
 
+  const fetchChatroomDetails = async (chatroomId: string) => {
+    try {
+      const response = await apiClient.get(`/api/chatrooms/${chatroomId}/invite-link`, {
+        credentials: 'include'
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          setCurrentChatroom({
+            id: chatroomId,
+            name: data.chatroomName,
+            inviteCode: data.inviteCode
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching chatroom details:', error);
+    }
+  };
+
   const handleSelectChatroom = (chatroomId: string | null) => {
     setSelectedChatroomId(chatroomId);
     setMessages([]); // Clear messages when switching chatrooms
     setLastMessageTime('');
     setLoading(true);
+    setCurrentChatroom(null); // Clear current chatroom details
+
+    if (chatroomId) {
+      fetchChatroomDetails(chatroomId);
+    }
   };
 
   const getCurrentChatroomName = () => {
@@ -495,6 +523,14 @@ export default function ChatInterface() {
 
         {/* Chat area */}
         <div className="flex-1 flex flex-col">
+          {/* Invite Code Display */}
+          {currentChatroom && currentChatroom.inviteCode && (
+            <InviteCodeDisplay
+              inviteCode={currentChatroom.inviteCode}
+              chatroomName={currentChatroom.name}
+            />
+          )}
+
           {/* Messages */}
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
             {messages.length === 0 ? (

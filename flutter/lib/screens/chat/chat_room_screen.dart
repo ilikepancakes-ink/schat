@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/chat_provider.dart';
@@ -83,6 +84,9 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
             ],
           ),
         ),
+        // Invite Code Display
+        if (widget.chatroom.inviteCode != null)
+          _buildInviteCodeDisplay(),
         // Messages
         Expanded(
           child: Consumer<ChatProvider>(
@@ -266,6 +270,77 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
           );
         }
       });
+    }
+  }
+
+  Widget _buildInviteCodeDisplay() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.blue.shade50,
+        border: Border(
+          bottom: BorderSide(color: Colors.blue.shade200),
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.tag,
+            size: 16,
+            color: Colors.blue.shade600,
+          ),
+          const SizedBox(width: 8),
+          Text(
+            'Invite Code:',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: Colors.blue.shade700,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.blue.shade100,
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: Text(
+              widget.chatroom.inviteCode!,
+              style: TextStyle(
+                fontSize: 14,
+                fontFamily: 'monospace',
+                color: Colors.blue.shade800,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          const Spacer(),
+          TextButton.icon(
+            onPressed: () => _copyInviteCode(),
+            icon: const Icon(Icons.copy, size: 16),
+            label: const Text('Copy'),
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.blue.shade600,
+              textStyle: const TextStyle(fontSize: 12),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _copyInviteCode() async {
+    if (widget.chatroom.inviteCode != null) {
+      await Clipboard.setData(ClipboardData(text: widget.chatroom.inviteCode!));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Invite code copied to clipboard!'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
     }
   }
 }
