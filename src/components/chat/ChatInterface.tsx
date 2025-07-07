@@ -688,6 +688,47 @@ export default function ChatInterface() {
           >
             Test API Call
           </button>
+          <button
+            onClick={async () => {
+              console.log('🧪 Checking user list vs database');
+              console.log('🧪 Current users in list:', users.map(u => ({ id: u.id, username: u.username })));
+
+              // Try to call profile API for each user to see which ones fail
+              for (const testUser of users.slice(0, 3)) {
+                console.log(`🧪 Testing user: ${testUser.username} (${testUser.id})`);
+                try {
+                  const response = await apiClient.get(`/api/profile/${testUser.id}`, {
+                    credentials: 'include',
+                  });
+                  console.log(`✅ ${testUser.username}: ${response.status}`);
+                } catch (error) {
+                  console.log(`❌ ${testUser.username}: Error`, error);
+                }
+              }
+            }}
+            className="block bg-yellow-500 text-white p-2 rounded text-xs"
+          >
+            Debug Users
+          </button>
+          <button
+            onClick={async () => {
+              console.log('🔧 Calling debug endpoint...');
+              try {
+                const response = await apiClient.get('/api/debug/users', {
+                  credentials: 'include',
+                });
+                const data = await response.json();
+                console.log('🔧 Debug endpoint response:', data);
+                alert('Debug data logged to console. Check browser console for details.');
+              } catch (error) {
+                console.error('🔧 Debug endpoint error:', error);
+                alert('Debug endpoint failed. Check console for details.');
+              }
+            }}
+            className="block bg-purple-500 text-white p-2 rounded text-xs"
+          >
+            Debug DB
+          </button>
         </div>
       )}
 
