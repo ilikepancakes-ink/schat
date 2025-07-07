@@ -33,7 +33,20 @@ export async function GET(
     const { userId } = await params;
     const currentUserId = authResult.user.id;
     console.log('🔍 Looking up profile for userId:', userId);
+    console.log('🔍 UserId type:', typeof userId);
+    console.log('🔍 UserId length:', userId?.length);
     console.log('🔍 Current user ID:', currentUserId);
+    console.log('🔍 Current user ID type:', typeof currentUserId);
+
+    // Validate userId format (should be a UUID)
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(userId)) {
+      console.log('❌ Invalid UUID format for userId:', userId);
+      return NextResponse.json({
+        success: false,
+        error: 'Invalid user ID format',
+      }, { status: 400 });
+    }
 
     // Get user profile
     console.log('📡 Querying database for user profile...');
