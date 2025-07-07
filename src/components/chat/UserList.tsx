@@ -88,6 +88,8 @@ export default function UserList({
                 <button
                   onClick={() => {
                     console.log('👤 Username clicked:', user.username, 'ID:', user.id);
+                    console.log('👤 User ID type:', typeof user.id);
+                    console.log('👤 User ID length:', user.id?.length);
                     console.log('👤 onUserClick function exists:', !!onUserClick);
                     onUserClick?.(user.id);
                   }}

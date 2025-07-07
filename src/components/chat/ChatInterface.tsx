@@ -29,6 +29,11 @@ export default function ChatInterface() {
   const [error, setError] = useState('');
   const [lastMessageTime, setLastMessageTime] = useState<string>('');
   const [selectedProfile, setSelectedProfile] = useState<UserProfileType | null>(null);
+
+  // Debug: Log selectedProfile changes
+  useEffect(() => {
+    console.log('🎭 selectedProfile state changed:', selectedProfile);
+  }, [selectedProfile]);
   const [pendingInvites, setPendingInvites] = useState<ChatroomInvite[]>([]);
   const [showInviteNotifications, setShowInviteNotifications] = useState(false);
   const [showPrivacySettings, setShowPrivacySettings] = useState(false);
@@ -315,6 +320,14 @@ export default function ChatInterface() {
 
   const handleUserClick = async (userId: string) => {
     console.log('🔍 handleUserClick called with userId:', userId);
+
+    // Validate userId
+    if (!userId || typeof userId !== 'string') {
+      console.error('❌ Invalid userId:', userId);
+      setError('Invalid user ID');
+      return;
+    }
+
     try {
       console.log('📡 Making API call to /api/profile/' + userId);
       const response = await apiClient.get(`/api/profile/${userId}`, {
@@ -322,21 +335,35 @@ export default function ChatInterface() {
       });
 
       console.log('📡 API response status:', response.status);
+      console.log('📡 API response headers:', Object.fromEntries(response.headers.entries()));
+
       if (response.ok) {
         const data = await response.json();
         console.log('📡 API response data:', data);
-        if (data.success) {
+        if (data.success && data.profile) {
           console.log('✅ Setting selectedProfile to:', data.profile);
           setSelectedProfile(data.profile);
           console.log('✅ selectedProfile state should now be set');
+          // Clear any previous errors
+          setError('');
         } else {
           console.error('❌ Profile API returned error:', data.error);
+          setError(`Failed to load profile: ${data.error || 'No profile data'}`);
         }
       } else {
         console.error('❌ Profile API request failed with status:', response.status);
+        let errorMessage = 'Server error';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorMessage;
+        } catch (e) {
+          console.log('Could not parse error response as JSON');
+        }
+        setError(`Failed to load profile: ${errorMessage}`);
       }
     } catch (error) {
       console.error('❌ Error fetching profile:', error);
+      setError('Failed to load profile: Network error');
     }
   };
 
@@ -585,13 +612,76 @@ export default function ChatInterface() {
           {console.log('🎭 Rendering UserProfile component with profile:', selectedProfile)}
           <UserProfile
             profile={selectedProfile}
-            onClose={() => setSelectedProfile(null)}
+            onClose={() => {
+              console.log('🎭 UserProfile onClose called');
+              setSelectedProfile(null);
+            }}
             onSendMessage={handleSendMessage}
             onAddFriend={handleAddFriend}
             onRemoveFriend={handleRemoveFriend}
             onUpdateProfile={handleUpdateProfile}
           />
         </>
+      )}
+
+      {/* Error display */}
+      {error && (
+        <div className="fixed top-4 left-4 bg-red-500 text-white p-4 rounded z-[110] text-sm max-w-md">
+          <div className="flex items-center justify-between">
+            <span>{error}</span>
+            <button
+              onClick={() => setError('')}
+              className="ml-2 text-white hover:text-gray-200"
+            >
+              ×
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Debug info */}
+      {selectedProfile && (
+        <div className="fixed top-4 right-4 bg-green-500 text-white p-4 rounded z-[110] text-sm font-bold">
+          Profile loaded: {selectedProfile.username}
+          <br />
+          ID: {selectedProfile.id}
+        </div>
+      )}
+
+      {/* Test buttons for debugging */}
+      {user?.is_admin && (
+        <div className="fixed bottom-4 right-4 space-y-2 z-[60]">
+          <button
+            onClick={() => {
+              console.log('🧪 Test button clicked - setting dummy profile');
+              setSelectedProfile({
+                id: 'test-id',
+                username: 'testuser',
+                display_name: 'Test User',
+                bio: 'This is a test profile',
+                is_admin: false,
+                is_site_owner: false,
+                is_online: true,
+                created_at: new Date().toISOString(),
+                friend_status: 'none'
+              });
+            }}
+            className="block bg-purple-500 text-white p-2 rounded text-xs"
+          >
+            Test Profile
+          </button>
+          <button
+            onClick={async () => {
+              console.log('🧪 Test API call with current user ID');
+              if (user?.id) {
+                await handleUserClick(user.id);
+              }
+            }}
+            className="block bg-orange-500 text-white p-2 rounded text-xs"
+          >
+            Test API Call
+          </button>
+        </div>
       )}
 
       {/* Privacy Settings Modal */}

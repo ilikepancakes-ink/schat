@@ -152,14 +152,14 @@ export default function UserProfile({
   console.log('🎭 UserProfile component rendering with profile:', profile);
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto border-2 border-blue-500">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100] p-4">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto border-2 border-blue-500">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-900">User Profile</h2>
+        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">User Profile</h2>
           <button
             onClick={onClose}
-            className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
+            className="p-1 text-gray-400 hover:text-gray-600 dark:text-gray-300 dark:hover:text-gray-100 transition-colors"
           >
             <X size={20} />
           </button>
@@ -219,7 +219,7 @@ export default function UserProfile({
           <div className="space-y-4">
             {/* Display Name */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Display Name
               </label>
               {isEditing ? (
@@ -227,23 +227,23 @@ export default function UserProfile({
                   type="text"
                   value={editedProfile.display_name}
                   onChange={(e) => setEditedProfile(prev => ({ ...prev, display_name: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                   placeholder="Enter display name"
                 />
               ) : (
-                <p className="text-gray-900">{displayName}</p>
+                <p className="text-gray-900 dark:text-gray-100">{displayName}</p>
               )}
             </div>
 
             {/* Username */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Username
               </label>
               <div className="flex items-center space-x-2">
-                <p className="text-gray-900">@{profile.username}</p>
+                <p className="text-gray-900 dark:text-gray-100">@{profile.username}</p>
                 {profile.is_admin && (
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">
                     <Shield size={12} className="mr-1" />
                     STAFF
                   </span>
@@ -253,20 +253,20 @@ export default function UserProfile({
 
             {/* Bio */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Bio
               </label>
               {isEditing ? (
                 <textarea
                   value={editedProfile.bio}
                   onChange={(e) => setEditedProfile(prev => ({ ...prev, bio: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                   rows={3}
                   placeholder="Tell us about yourself..."
                   maxLength={500}
                 />
               ) : (
-                <p className="text-gray-700">
+                <p className="text-gray-700 dark:text-gray-300">
                   {profile.bio || 'No bio available'}
                 </p>
               )}
@@ -274,10 +274,10 @@ export default function UserProfile({
 
             {/* Member Since */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Member Since
               </label>
-              <div className="flex items-center text-gray-600">
+              <div className="flex items-center text-gray-600 dark:text-gray-400">
                 <Calendar size={16} className="mr-2" />
                 {formatDate(profile.created_at)}
               </div>
@@ -299,7 +299,7 @@ export default function UserProfile({
                     </button>
                     <button
                       onClick={handleCancel}
-                      className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-400 transition-colors flex items-center justify-center"
+                      className="flex-1 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-200 py-2 px-4 rounded-lg hover:bg-gray-400 dark:hover:bg-gray-500 transition-colors flex items-center justify-center"
                     >
                       <XCircle size={16} className="mr-2" />
                       Cancel
@@ -335,7 +335,7 @@ export default function UserProfile({
                       profile.friend_status === 'accepted'
                         ? 'bg-red-600 text-white hover:bg-red-700'
                         : profile.friend_status === 'pending_sent'
-                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                        ? 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
                         : 'bg-green-600 text-white hover:bg-green-700'
                     }`}
                   >
