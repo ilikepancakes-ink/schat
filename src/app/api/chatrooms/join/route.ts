@@ -58,14 +58,21 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user is already a member
-    const { data: existingMember, error: existingMemberError } = await supabaseAdmin
+    const { data: existingMembers, error: existingMemberError } = await supabaseAdmin
       .from('chatroom_members')
       .select('id')
       .eq('chatroom_id', chatroom.id)
-      .eq('user_id', userId)
-      .single();
+      .eq('user_id', userId);
 
-    if (existingMember) {
+    if (existingMemberError) {
+      console.error('Error checking existing membership:', existingMemberError);
+      return NextResponse.json({
+        success: false,
+        error: 'Failed to check membership status',
+      }, { status: 500 });
+    }
+
+    if (existingMembers && existingMembers.length > 0) {
       return NextResponse.json({
         success: false,
         error: 'You are already a member of this chatroom',
@@ -170,14 +177,21 @@ export async function GET(request: NextRequest) {
     }
 
     // Check if user is already a member
-    const { data: existingMember, error: existingMemberError } = await supabaseAdmin
+    const { data: existingMembers, error: existingMemberError } = await supabaseAdmin
       .from('chatroom_members')
       .select('id')
       .eq('chatroom_id', chatroom.id)
-      .eq('user_id', userId)
-      .single();
+      .eq('user_id', userId);
 
-    const isAlreadyMember = !!existingMember;
+    if (existingMemberError) {
+      console.error('Error checking existing membership:', existingMemberError);
+      return NextResponse.json({
+        success: false,
+        error: 'Failed to check membership status',
+      }, { status: 500 });
+    }
+
+    const isAlreadyMember = existingMembers && existingMembers.length > 0;
 
     // Get member count
     const { data: memberCount, error: memberCountError } = await supabaseAdmin

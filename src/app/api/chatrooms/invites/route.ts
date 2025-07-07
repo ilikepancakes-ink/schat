@@ -149,14 +149,21 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user is already a member
-    const { data: existingMember, error: existingMemberError } = await supabaseAdmin
+    const { data: existingMembers, error: existingMemberError } = await supabaseAdmin
       .from('chatroom_members')
       .select('id')
       .eq('chatroom_id', chatroomId)
-      .eq('user_id', invitedUser.id)
-      .single();
+      .eq('user_id', invitedUser.id);
 
-    if (existingMember) {
+    if (existingMemberError) {
+      console.error('Error checking existing membership:', existingMemberError);
+      return NextResponse.json({
+        success: false,
+        error: 'Failed to check membership status',
+      }, { status: 500 });
+    }
+
+    if (existingMembers && existingMembers.length > 0) {
       return NextResponse.json({
         success: false,
         error: 'User is already a member of this chatroom',
