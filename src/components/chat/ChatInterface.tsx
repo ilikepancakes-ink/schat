@@ -499,7 +499,7 @@ export default function ChatInterface() {
 
   const getCurrentChatroomName = () => {
     if (!selectedChatroomId || selectedChatroomId === null) {
-      return 'General Chat';
+      return 'Welcome to Schat';
     }
     // We could fetch chatroom details here, but for now just show the ID
     return `Chatroom ${selectedChatroomId.slice(0, 8)}...`;
@@ -565,9 +565,41 @@ export default function ChatInterface() {
             />
           )}
 
-          {/* Messages */}
+          {/* Messages or Welcome Screen */}
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
-            {messages.length === 0 ? (
+            {!selectedChatroomId ? (
+              // Welcome Screen
+              <div className="flex-1 flex items-center justify-center">
+                <div className="text-center max-w-md mx-auto">
+                  <div className="text-6xl mb-6">💬</div>
+                  <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-4">
+                    Welcome to Schat
+                  </h2>
+                  <p className="text-gray-600 dark:text-gray-400 mb-8">
+                    Connect with your community, create servers, and chat with friends in real-time.
+                  </p>
+                  <div className="space-y-3">
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      Get started by choosing an option from the sidebar:
+                    </p>
+                    <div className="flex flex-col space-y-2 text-sm text-gray-600 dark:text-gray-400">
+                      <div className="flex items-center justify-center space-x-2">
+                        <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                        <span>Join the community server</span>
+                      </div>
+                      <div className="flex items-center justify-center space-x-2">
+                        <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                        <span>Create your own server</span>
+                      </div>
+                      <div className="flex items-center justify-center space-x-2">
+                        <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
+                        <span>Join with an invite code</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : messages.length === 0 ? (
               <div className="text-center text-gray-500 dark:text-gray-400 mt-8">
                 <p>No messages yet. Start the conversation!</p>
               </div>
@@ -584,13 +616,15 @@ export default function ChatInterface() {
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Message input */}
-          <MessageInput
-            onSendMessage={sendMessage}
-            onCommand={handleCommand}
-            currentChatroomId={selectedChatroomId || undefined}
-            disabled={user?.is_banned}
-          />
+          {/* Message input - only show when a chatroom is selected */}
+          {selectedChatroomId && (
+            <MessageInput
+              onSendMessage={sendMessage}
+              onCommand={handleCommand}
+              currentChatroomId={selectedChatroomId || undefined}
+              disabled={user?.is_banned}
+            />
+          )}
         </div>
 
         {/* User list */}

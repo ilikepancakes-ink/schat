@@ -121,21 +121,21 @@ async function setupDatabase() {
       .eq('is_default', true);
 
     if (!existingRooms || existingRooms.length === 0) {
-      // Create General Chat room
-      const { error: generalError } = await supabase
+      // Create Community Chatroom
+      const { error: communityError } = await supabase
         .from('chatrooms')
         .insert({
-          name: 'General Chat',
+          name: 'Community Chatroom',
           description: 'Main chat room for all users',
           is_default: true,
           is_staff_only: false,
-          invite_code: 'general-chat-default'
+          invite_code: 'community-chatroom-default'
         });
 
-      if (generalError) {
-        console.error('Error creating General Chat room:', generalError);
+      if (communityError) {
+        console.error('Error creating Community Chatroom:', communityError);
       } else {
-        console.log('✓ General Chat room created');
+        console.log('✓ Community Chatroom created');
       }
 
       // Create Staff Announcements room

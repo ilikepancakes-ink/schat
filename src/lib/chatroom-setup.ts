@@ -41,38 +41,38 @@ export async function initializeDefaultChatrooms() {
       console.log('Created staff announcements room:', staffRoom.id);
     }
 
-    // Create general chat room if it doesn't exist
-    if (!existingRoomNames.includes('General Chat')) {
-      const { data: generalRoom, error: generalRoomError } = await supabaseAdmin
+    // Create community chatroom if it doesn't exist
+    if (!existingRoomNames.includes('Community Chatroom')) {
+      const { data: communityRoom, error: communityRoomError } = await supabaseAdmin
         .from('chatrooms')
         .insert({
-          name: 'General Chat',
+          name: 'Community Chatroom',
           description: 'Main chat room for everyone',
           is_default: true,
           is_staff_only: false,
-          invite_code: 'general-chat-' + Math.random().toString(36).substring(2, 15),
+          invite_code: 'community-chatroom-' + Math.random().toString(36).substring(2, 15),
         })
         .select()
         .single();
 
-      if (generalRoomError) {
-        console.error('Error creating general chat room:', generalRoomError);
-        return { success: false, error: 'Failed to create general chat room' };
+      if (communityRoomError) {
+        console.error('Error creating community chatroom:', communityRoomError);
+        return { success: false, error: 'Failed to create community chatroom' };
       }
 
-      console.log('Created general chat room:', generalRoom.id);
+      console.log('Created community chatroom:', communityRoom.id);
 
-      // Add all existing users to the general chat room
+      // Add all existing users to the community chatroom
       const { data: users, error: usersError } = await supabaseAdmin
         .from('users')
         .select('id')
         .eq('is_banned', false);
 
       if (usersError) {
-        console.error('Error fetching users for general chat:', usersError);
+        console.error('Error fetching users for community chatroom:', usersError);
       } else if (users && users.length > 0) {
         const memberInserts = users.map(user => ({
-          chatroom_id: generalRoom.id,
+          chatroom_id: communityRoom.id,
           user_id: user.id,
           role: 'member' as const,
         }));
@@ -82,9 +82,9 @@ export async function initializeDefaultChatrooms() {
           .insert(memberInserts);
 
         if (membersError) {
-          console.error('Error adding users to general chat:', membersError);
+          console.error('Error adding users to community chatroom:', membersError);
         } else {
-          console.log(`Added ${users.length} users to general chat`);
+          console.log(`Added ${users.length} users to community chatroom`);
         }
       }
     }

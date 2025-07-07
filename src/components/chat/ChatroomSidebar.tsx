@@ -4,13 +4,12 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Chatroom } from '@/types/database';
 import { apiClient } from '@/lib/api-client';
-import { 
-  MessageCircle, 
-  Plus, 
-  Hash, 
-  Lock, 
-  Users, 
-  Settings,
+import {
+  MessageCircle,
+  Plus,
+  Hash,
+  Lock,
+  Users,
   X,
   Crown
 } from 'lucide-react';
@@ -124,10 +123,6 @@ export default function ChatroomSidebar({
     onSelectChatroom(chatroomId);
   };
 
-  const handleSelectGeneral = () => {
-    onSelectChatroom(null); // null represents the general chat
-  };
-
   const handleJoinWithCode = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!joinCode.trim()) return;
@@ -226,16 +221,55 @@ export default function ChatroomSidebar({
             </div>
           ) : (
             <div className="p-2 space-y-1">
-              {/* General Chat */}
-              <button
-                onClick={handleSelectGeneral}
-                className={`w-full flex items-center space-x-3 p-2 rounded-lg text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 ${
-                  !selectedChatroomId ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300' : 'text-gray-700 dark:text-gray-300'
-                }`}
-              >
-                <Hash size={16} className="text-gray-500 dark:text-gray-400" />
-                <span className="text-sm font-medium">General Chat</span>
-              </button>
+              {/* Welcome Menu */}
+              {!selectedChatroomId && (
+                <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                  <h4 className="text-lg font-semibold text-blue-900 dark:text-blue-100 mb-3 text-center">
+                    Welcome to Schat
+                  </h4>
+                  <div className="space-y-2">
+                    {/* Join Community Server */}
+                    <button
+                      onClick={() => {
+                        // Find the community chatroom (renamed from general)
+                        const communityRoom = chatrooms.find(room =>
+                          room.name.toLowerCase().includes('community') ||
+                          room.name.toLowerCase().includes('general') ||
+                          room.is_default === true
+                        );
+                        if (communityRoom) {
+                          handleSelectChatroom(communityRoom.id);
+                        } else {
+                          // If no community room exists, show message
+                          setError('Community server not found. Please ask an admin to create one.');
+                        }
+                      }}
+                      className="w-full flex items-center justify-center space-x-2 p-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors duration-200"
+                    >
+                      <Users size={16} />
+                      <span className="text-sm font-medium">Join Community Server</span>
+                    </button>
+
+                    {/* Make a Server */}
+                    <button
+                      onClick={() => setShowCreateForm(true)}
+                      className="w-full flex items-center justify-center space-x-2 p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200"
+                    >
+                      <Plus size={16} />
+                      <span className="text-sm font-medium">Make a Server</span>
+                    </button>
+
+                    {/* Join with Invite Code */}
+                    <button
+                      onClick={() => setShowJoinForm(true)}
+                      className="w-full flex items-center justify-center space-x-2 p-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors duration-200"
+                    >
+                      <Hash size={16} />
+                      <span className="text-sm font-medium">Join with Invite Code</span>
+                    </button>
+                  </div>
+                </div>
+              )}
 
               {/* User's Chatrooms */}
               {chatrooms.map((chatroom) => (
