@@ -1,10 +1,10 @@
 {
   "roots": [
-    "schoolchat_windows"
+    "schat_windows"
   ],
   "packages": [
     {
-      "name": "schoolchat_windows",
+      "name": "schat_windows",
       "version": "1.0.0+1",
       "dependencies": [
         "crypto",

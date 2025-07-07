@@ -1,11 +1,11 @@
-# SchoolChat Windows Desktop App
+# Schat Windows Desktop App
 
-A Flutter Windows desktop application for the SchoolChat platform.
+A Flutter Windows desktop application for the Schat platform.
 
 ## Features
 
 - **Real-time Chat**: Connect to chatrooms and send/receive messages in real-time
-- **User Authentication**: Login and register with your SchoolChat account
+- **User Authentication**: Login and register with your Schat account
 - **Multiple Chatrooms**: Join different chatrooms using invite codes
 - **Windows Native**: Built specifically for Windows desktop with native window management
 - **Dark/Light Theme**: Automatic theme switching based on system preferences
@@ -22,7 +22,7 @@ A Flutter Windows desktop application for the SchoolChat platform.
 1. **Clone the repository** (if not already done):
    ```bash
    git clone <repository-url>
-   cd schoolchat/flutter
+   cd schat/flutter
    ```
 
 2. **Install dependencies**:
@@ -52,7 +52,7 @@ The built application will be available in `build/windows/runner/Release/`.
 
 ## Configuration
 
-The app connects to the SchoolChat backend at `https://chat.ilikepancakes.ink`. This is configured in `lib/services/api_service.dart`.
+The app connects to the Schat backend at `https://chat.ilikepancakes.ink`. This is configured in `lib/services/api_service.dart`.
 
 ## Project Structure
 
@@ -103,7 +103,7 @@ lib/
 
 ## API Integration
 
-The app integrates with the existing SchoolChat web API:
+The app integrates with the existing Schat web API:
 
 - **Authentication**: `/api/auth/login`, `/api/auth/register`
 - **Chatrooms**: `/api/chatrooms`, `/api/chatrooms/join`
@@ -155,4 +155,4 @@ Application logs are available in the Flutter console when running in debug mode
 
 ## License
 
-This project is part of the SchoolChat platform.
+This project is part of the Schat platform.

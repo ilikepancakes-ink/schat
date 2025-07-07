@@ -20,7 +20,7 @@ void main() async {
     backgroundColor: Colors.transparent,
     skipTaskbar: false,
     titleBarStyle: TitleBarStyle.normal,
-    title: 'SchoolChat',
+    title: 'Schat',
   );
   
   windowManager.waitUntilReadyToShow(windowOptions, () async {
@@ -28,11 +28,11 @@ void main() async {
     await windowManager.focus();
   });
 
-  runApp(const SchoolChatApp());
+  runApp(const SchatApp());
 }
 
-class SchoolChatApp extends StatelessWidget {
-  const SchoolChatApp({super.key});
+class SchatApp extends StatelessWidget {
+  const SchatApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -42,7 +42,7 @@ class SchoolChatApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => ChatProvider()),
       ],
       child: MaterialApp(
-        title: 'SchoolChat',
+        title: 'Schat',
         theme: AppTheme.lightTheme,
         darkTheme: AppTheme.darkTheme,
         themeMode: ThemeMode.system,

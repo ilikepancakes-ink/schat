@@ -338,7 +338,7 @@
       "languageVersion": "3.3"
     },
     {
-      "name": "schoolchat_windows",
+      "name": "schat_windows",
       "rootUri": "../",
       "packageUri": "lib/",
       "languageVersion": "3.0"
