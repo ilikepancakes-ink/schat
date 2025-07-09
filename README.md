@@ -177,7 +177,7 @@ Visit `/developers` in the application for comprehensive API documentation, incl
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the Apachie License 2.0 see the LICENSE file for details.
 
 ## 🆘 Support
 
