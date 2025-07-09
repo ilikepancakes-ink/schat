@@ -187,6 +187,6 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## 🔗 Links
 
-- **Live Demo**: [Your deployment URL]
-- **API Docs**: [Your deployment URL]/developers
-- **Security Reports**: [Your deployment URL]/security-report
+- **offical site** https://chat.ilikepancakes.ink
+- **API Docs**: https://chat.ilikepancakes.ink/developers
+- **Security Reports**: https://chat.ilikepancakes.ink/security-report
