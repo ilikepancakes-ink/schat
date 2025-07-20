@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, HelpCircle, Paperclip, X, File, Image } from 'lucide-react';
 import { parseCommand, isCommand, getCommandHelp } from '@/lib/command-parser';
-import { fileIOClient, FileIOResponse } from '@/lib/api-client';
+
 import { FileAttachment } from '@/types/database';
 
 interface MessageInputProps {
@@ -40,12 +40,31 @@ export default function MessageInput({
           throw new Error(`File ${file.name} is too large (max 100MB)`);
         }
 
-        // Upload to file.io with 7 days expiry and max 10 downloads
-        const uploadResult: FileIOResponse = await fileIOClient.upload(file, {
-          expires: '7d',
-          maxDownloads: 10,
-          autoDelete: true
+        // Create form data for our proxy endpoint
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('expires', '7d');
+        formData.append('maxDownloads', '10');
+        formData.append('autoDelete', 'true');
+
+        // Upload via our proxy endpoint
+        const response = await fetch('/api/upload-file', {
+          method: 'POST',
+          credentials: 'include',
+          body: formData,
         });
+
+        if (!response.ok) {
+          throw new Error(`Upload failed: ${response.statusText}`);
+        }
+
+        const result = await response.json();
+
+        if (!result.success) {
+          throw new Error(result.error || 'Upload failed');
+        }
+
+        const uploadResult = result.data;
 
         const attachment: FileAttachment = {
           id: uploadResult.id,
