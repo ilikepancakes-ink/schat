@@ -69,6 +69,7 @@ export async function GET(
         chatroom_id,
         user_id,
         content,
+        attachments,
         created_at,
         updated_at,
         is_deleted,
@@ -100,6 +101,7 @@ export async function GET(
           chatroom_id: message.chatroom_id,
           user_id: message.user_id,
           content: decryptedContent,
+          attachments: message.attachments || [],
           created_at: message.created_at,
           updated_at: message.updated_at,
           is_deleted: message.is_deleted,
@@ -116,6 +118,7 @@ export async function GET(
           chatroom_id: message.chatroom_id,
           user_id: message.user_id,
           content: '[Message could not be decrypted]',
+          attachments: message.attachments || [],
           created_at: message.created_at,
           updated_at: message.updated_at,
           is_deleted: message.is_deleted,
@@ -235,12 +238,14 @@ export async function POST(
         chatroom_id: chatroomId,
         user_id: userId,
         content: encryptedContent,
+        attachments: validation.sanitized!.attachments || [],
       })
       .select(`
         id,
         chatroom_id,
         user_id,
         content,
+        attachments,
         created_at,
         updated_at,
         is_deleted,
@@ -260,6 +265,7 @@ export async function POST(
     const messageWithUser = {
       ...newMessage,
       content: validation.sanitized!.content, // Return decrypted content
+      attachments: validation.sanitized!.attachments || [],
       username: authResult.user.username,
       display_name: authResult.user.username, // Use username as fallback
       profile_picture_url: null, // Profile pictures not implemented yet

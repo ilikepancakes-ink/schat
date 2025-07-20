@@ -41,6 +41,7 @@ CREATE TABLE IF NOT EXISTS messages (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID REFERENCES users(id) ON DELETE CASCADE,
   content TEXT NOT NULL, -- This will store encrypted content
+  attachments JSONB DEFAULT '[]'::jsonb, -- File attachments
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   is_deleted BOOLEAN DEFAULT FALSE,
@@ -76,6 +77,7 @@ CREATE TABLE IF NOT EXISTS chatroom_messages (
   chatroom_id UUID REFERENCES chatrooms(id) ON DELETE CASCADE,
   user_id UUID REFERENCES users(id) ON DELETE CASCADE,
   content TEXT NOT NULL, -- This will store encrypted content
+  attachments JSONB DEFAULT '[]'::jsonb, -- File attachments
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   is_deleted BOOLEAN DEFAULT FALSE,
@@ -169,6 +171,7 @@ CREATE TABLE IF NOT EXISTS private_messages (
   sender_id UUID REFERENCES users(id) ON DELETE CASCADE,
   recipient_id UUID REFERENCES users(id) ON DELETE CASCADE,
   content TEXT NOT NULL, -- This will store encrypted content
+  attachments JSONB DEFAULT '[]'::jsonb, -- File attachments
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   is_read BOOLEAN DEFAULT FALSE,

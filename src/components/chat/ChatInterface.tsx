@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { ChatMessage as ChatMessageType, ChatUser, ChatroomInvite } from '@/types/database';
+import { ChatMessage as ChatMessageType, ChatUser, ChatroomInvite, FileAttachment } from '@/types/database';
 import ChatHeader from './ChatHeader';
 import ChatMessage from './ChatMessage';
 import MessageInput from './MessageInput';
@@ -173,14 +173,14 @@ export default function ChatInterface() {
     }
   };
 
-  const sendMessage = async (content: string) => {
+  const sendMessage = async (content: string, attachments?: FileAttachment[]) => {
     try {
       const endpoint = selectedChatroomId
         ? `/api/chatrooms/${selectedChatroomId}/messages`
         : '/api/messages';
 
       const response = await apiClient.post(endpoint,
-        { content },
+        { content, attachments },
         { credentials: 'include' }
       );
 

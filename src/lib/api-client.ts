@@ -153,5 +153,99 @@ export const apiClient = {
     }),
 };
 
+/**
+ * File.io API client for file uploads
+ */
+export interface FileIOResponse {
+  success: boolean;
+  status: number;
+  id: string;
+  key: string;
+  name: string;
+  link: string;
+  expires: string;
+  expiry: string;
+  downloads: number;
+  maxDownloads: number;
+  autoDelete: boolean;
+  size: number;
+  mimeType: string;
+  created: string;
+  modified: string;
+}
+
+export interface FileIOUploadOptions {
+  expires?: string; // Time period like "1d", "1w", "1M"
+  maxDownloads?: number;
+  autoDelete?: boolean;
+}
+
+export const fileIOClient = {
+  /**
+   * Upload a file to file.io
+   */
+  upload: async (file: File, options: FileIOUploadOptions = {}): Promise<FileIOResponse> => {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    if (options.expires) {
+      formData.append('expires', options.expires);
+    }
+    if (options.maxDownloads !== undefined) {
+      formData.append('maxDownloads', options.maxDownloads.toString());
+    }
+    if (options.autoDelete !== undefined) {
+      formData.append('autoDelete', options.autoDelete.toString());
+    }
+
+    const response = await fetch('https://file.io/', {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new Error(`File upload failed: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+
+    if (!data.success) {
+      throw new Error(`File upload failed: ${data.message || 'Unknown error'}`);
+    }
+
+    return data;
+  },
+
+  /**
+   * Get file information by key
+   */
+  getInfo: async (key: string): Promise<FileIOResponse> => {
+    const response = await fetch(`https://file.io/${key}`, {
+      method: 'GET',
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to get file info: ${response.statusText}`);
+    }
+
+    return response.json();
+  },
+
+  /**
+   * Delete a file by key
+   */
+  delete: async (key: string): Promise<{ success: boolean; status: number }> => {
+    const response = await fetch(`https://file.io/${key}`, {
+      method: 'DELETE',
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to delete file: ${response.statusText}`);
+    }
+
+    return response.json();
+  }
+};
+
 // Export the main function as default for backward compatibility
 export default apiRequest;

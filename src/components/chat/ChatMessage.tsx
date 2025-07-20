@@ -3,7 +3,7 @@
 import React from 'react';
 import { ChatMessage as ChatMessageType } from '@/types/database';
 import { useAuth } from '@/contexts/AuthContext';
-import { Trash2, Shield } from 'lucide-react';
+import { Trash2, Shield, Download, File, Image, Video, Music, Archive } from 'lucide-react';
 import { parseMessageContent } from '@/lib/message-parser';
 import LinkEmbed from './LinkEmbed';
 
@@ -25,6 +25,32 @@ export default function ChatMessage({ message, onDeleteMessage, onUserClick }: C
 
   // Parse message content for links
   const parsedMessage = parseMessageContent(message.content);
+
+  const formatFileSize = (bytes: number): string => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  const getFileIcon = (mimeType: string) => {
+    if (mimeType.startsWith('image/')) {
+      return <Image size={16} className="text-blue-500" />;
+    } else if (mimeType.startsWith('video/')) {
+      return <Video size={16} className="text-purple-500" />;
+    } else if (mimeType.startsWith('audio/')) {
+      return <Music size={16} className="text-green-500" />;
+    } else if (mimeType.includes('zip') || mimeType.includes('rar') || mimeType.includes('tar')) {
+      return <Archive size={16} className="text-orange-500" />;
+    }
+    return <File size={16} className="text-gray-500" />;
+  };
+
+  const handleFileDownload = (url: string, filename: string) => {
+    // Open in new tab for download
+    window.open(url, '_blank');
+  };
 
   if (message.is_deleted) {
     return (
@@ -114,6 +140,56 @@ export default function ChatMessage({ message, onDeleteMessage, onUserClick }: C
             </button>
           )}
         </div>
+
+        {/* File attachments */}
+        {message.attachments && message.attachments.length > 0 && (
+          <div className="mt-2 space-y-2">
+            {message.attachments.map((attachment) => (
+              <div
+                key={attachment.id}
+                className={`flex items-center justify-between p-3 rounded-lg border transition-colors ${
+                  isOwnMessage
+                    ? 'bg-blue-500/20 border-blue-400/30'
+                    : 'bg-gray-50 dark:bg-gray-600 border-gray-200 dark:border-gray-500'
+                }`}
+              >
+                <div className="flex items-center space-x-3 flex-1 min-w-0">
+                  {getFileIcon(attachment.mimeType)}
+                  <div className="flex-1 min-w-0">
+                    <div className={`text-sm font-medium truncate ${
+                      isOwnMessage
+                        ? 'text-white'
+                        : 'text-gray-900 dark:text-gray-100'
+                    }`}>
+                      {attachment.name}
+                    </div>
+                    <div className={`text-xs ${
+                      isOwnMessage
+                        ? 'text-blue-100'
+                        : 'text-gray-500 dark:text-gray-400'
+                    }`}>
+                      {formatFileSize(attachment.size)} • {attachment.mimeType}
+                      {attachment.downloads !== undefined && (
+                        <span className="ml-2">• {attachment.downloads} downloads</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                <button
+                  onClick={() => handleFileDownload(attachment.url, attachment.name)}
+                  className={`p-2 rounded-lg transition-colors ${
+                    isOwnMessage
+                      ? 'text-white hover:bg-blue-400/30'
+                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-500'
+                  }`}
+                  title="Download file"
+                >
+                  <Download size={16} />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* Link embeds */}
         {parsedMessage.hasLinks && (

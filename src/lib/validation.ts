@@ -100,36 +100,89 @@ export function validateMessageContent(data: any): ValidationResult {
     return { valid: false, error: 'Invalid data format' };
   }
 
-  const { content } = data;
+  const { content, attachments } = data;
 
-  if (!content || typeof content !== 'string') {
-    return { valid: false, error: 'Message content is required' };
+  // Content is optional if there are attachments
+  if (!content && (!attachments || attachments.length === 0)) {
+    return { valid: false, error: 'Message content or attachments are required' };
   }
 
-  const trimmedContent = content.trim();
+  // Validate content if provided
+  if (content) {
+    if (typeof content !== 'string') {
+      return { valid: false, error: 'Message content must be a string' };
+    }
 
-  if (trimmedContent.length === 0) {
-    return { valid: false, error: 'Message cannot be empty' };
+    const trimmedContent = content.trim();
+
+    if (trimmedContent.length > 2000) {
+      return { valid: false, error: 'Message too long (max 2000 characters)' };
+    }
+
+    // Check for malicious content
+    if (containsMaliciousContent(trimmedContent)) {
+      return { valid: false, error: 'Message contains invalid content' };
+    }
+
+    // Check for spam patterns
+    if (isSpamContent(trimmedContent)) {
+      return { valid: false, error: 'Message appears to be spam' };
+    }
   }
 
-  if (trimmedContent.length > 2000) {
-    return { valid: false, error: 'Message too long (max 2000 characters)' };
-  }
+  // Validate attachments if provided
+  if (attachments) {
+    if (!Array.isArray(attachments)) {
+      return { valid: false, error: 'Attachments must be an array' };
+    }
 
-  // Check for malicious content
-  if (containsMaliciousContent(trimmedContent)) {
-    return { valid: false, error: 'Message contains invalid content' };
-  }
+    if (attachments.length > 10) {
+      return { valid: false, error: 'Too many attachments (max 10)' };
+    }
 
-  // Check for spam patterns
-  if (isSpamContent(trimmedContent)) {
-    return { valid: false, error: 'Message appears to be spam' };
+    for (const attachment of attachments) {
+      if (!attachment || typeof attachment !== 'object') {
+        return { valid: false, error: 'Invalid attachment format' };
+      }
+
+      const { id, name, size, mimeType, url, key } = attachment;
+
+      if (!id || typeof id !== 'string') {
+        return { valid: false, error: 'Attachment ID is required' };
+      }
+
+      if (!name || typeof name !== 'string' || name.length > 255) {
+        return { valid: false, error: 'Invalid attachment name' };
+      }
+
+      if (!size || typeof size !== 'number' || size <= 0 || size > 100 * 1024 * 1024) {
+        return { valid: false, error: 'Invalid attachment size (max 100MB)' };
+      }
+
+      if (!mimeType || typeof mimeType !== 'string') {
+        return { valid: false, error: 'Attachment MIME type is required' };
+      }
+
+      if (!url || typeof url !== 'string' || !url.startsWith('https://file.io/')) {
+        return { valid: false, error: 'Invalid attachment URL' };
+      }
+
+      if (!key || typeof key !== 'string') {
+        return { valid: false, error: 'Attachment key is required' };
+      }
+
+      // Check for malicious content in filename
+      if (containsMaliciousContent(name)) {
+        return { valid: false, error: 'Attachment name contains invalid content' };
+      }
+    }
   }
 
   return {
     valid: true,
     sanitized: {
-      content: sanitizeInput(trimmedContent),
+      content: content ? sanitizeInput(content.trim()) : '',
+      attachments: attachments || [],
     },
   };
 }

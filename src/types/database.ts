@@ -52,6 +52,18 @@ export interface ChatUser {
   display_name?: string;
 }
 
+export interface FileAttachment {
+  id: string;
+  name: string;
+  size: number;
+  mimeType: string;
+  url: string;
+  key: string; // file.io key for management
+  expires?: string;
+  maxDownloads?: number;
+  downloads?: number;
+}
+
 export interface ChatMessage {
   id: string;
   user_id: string;
@@ -61,6 +73,7 @@ export interface ChatMessage {
   is_admin: boolean;
   is_deleted: boolean;
   embeds?: LinkEmbed[];
+  attachments?: FileAttachment[];
 }
 
 export interface LinkEmbed {
