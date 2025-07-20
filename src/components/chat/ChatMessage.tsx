@@ -4,6 +4,8 @@ import React from 'react';
 import { ChatMessage as ChatMessageType } from '@/types/database';
 import { useAuth } from '@/contexts/AuthContext';
 import { Trash2, Shield } from 'lucide-react';
+import { parseMessageContent } from '@/lib/message-parser';
+import LinkEmbed from './LinkEmbed';
 
 interface ChatMessageProps {
   message: ChatMessageType;
@@ -20,6 +22,9 @@ export default function ChatMessage({ message, onDeleteMessage, onUserClick }: C
     const date = new Date(timestamp);
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
+
+  // Parse message content for links
+  const parsedMessage = parseMessageContent(message.content);
 
   if (message.is_deleted) {
     return (
@@ -67,9 +72,35 @@ export default function ChatMessage({ message, onDeleteMessage, onUserClick }: C
                 : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100'
             }`}
           >
-            <p className="text-sm whitespace-pre-wrap break-words">
-              {message.content}
-            </p>
+            {/* Render message segments */}
+            <div className="text-sm whitespace-pre-wrap break-words">
+              {parsedMessage.segments.map((segment, index) => {
+                if (segment.type === 'text') {
+                  return (
+                    <span key={index}>
+                      {segment.content}
+                    </span>
+                  );
+                } else if (segment.type === 'link') {
+                  return (
+                    <a
+                      key={index}
+                      href={segment.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`underline hover:no-underline ${
+                        isOwnMessage
+                          ? 'text-blue-100 hover:text-white'
+                          : 'text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300'
+                      }`}
+                    >
+                      {segment.url}
+                    </a>
+                  );
+                }
+                return null;
+              })}
+            </div>
           </div>
 
           {/* Admin delete button */}
@@ -83,6 +114,21 @@ export default function ChatMessage({ message, onDeleteMessage, onUserClick }: C
             </button>
           )}
         </div>
+
+        {/* Link embeds */}
+        {parsedMessage.hasLinks && (
+          <div className="mt-2 space-y-2">
+            {parsedMessage.segments
+              .filter(segment => segment.type === 'link')
+              .map((segment, index) => (
+                <LinkEmbed
+                  key={`${segment.url}-${index}`}
+                  url={segment.url}
+                  className="max-w-sm"
+                />
+              ))}
+          </div>
+        )}
       </div>
     </div>
   );

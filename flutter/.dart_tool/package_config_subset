@@ -206,10 +206,6 @@ xdg_directories
 3.3
 file:///C:/Users/zacre/AppData/Local/Pub/Cache/hosted/pub.dev/xdg_directories-1.1.0/
 file:///C:/Users/zacre/AppData/Local/Pub/Cache/hosted/pub.dev/xdg_directories-1.1.0/lib/
-schat_windows
-3.0
-file:///C:/Users/zacre/Desktop/schoolchat/flutter/
-file:///C:/Users/zacre/Desktop/schoolchat/flutter/lib/
 sky_engine
 3.7
 file:///C:/Users/zacre/flutter/bin/cache/pkg/sky_engine/
@@ -226,4 +222,8 @@ flutter_web_plugins
 3.7
 file:///C:/Users/zacre/flutter/packages/flutter_web_plugins/
 file:///C:/Users/zacre/flutter/packages/flutter_web_plugins/lib/
+schat_windows
+3.0
+file:///C:/Users/zacre/schoolchat-1/flutter/
+file:///C:/Users/zacre/schoolchat-1/flutter/lib/
 2

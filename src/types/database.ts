@@ -60,6 +60,17 @@ export interface ChatMessage {
   created_at: string;
   is_admin: boolean;
   is_deleted: boolean;
+  embeds?: LinkEmbed[];
+}
+
+export interface LinkEmbed {
+  url: string;
+  title?: string;
+  description?: string;
+  image?: string;
+  domain: string;
+  siteName?: string;
+  type?: string;
 }
 
 export interface AuthUser {
