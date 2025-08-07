@@ -1,7 +1,5 @@
 # Schat
 
-A modern, secure real-time chat application built with Next.js, featuring Discord-style functionality with enhanced security features for the cybersecurity community.
-
 ## 🚀 Features
 
 ### Core Chat Functionality
@@ -54,7 +52,7 @@ A modern, secure real-time chat application built with Next.js, featuring Discor
 
 ### 1. Clone the repository
 ```bash
-git clone <repository-url>
+git clone https://github.com/ilikepancakes-ink/schat.git
 cd schat
 ```
 
