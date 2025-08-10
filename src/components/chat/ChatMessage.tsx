@@ -14,7 +14,7 @@ interface ChatMessageProps {
   onUserContextMenu?: (userId: string, username: string, event: React.MouseEvent) => void;
 }
 
-export default function ChatMessage({ message, onDeleteMessage, onUserClick }: ChatMessageProps) {
+export default function ChatMessage({ message, onDeleteMessage, onUserClick, onUserContextMenu }: ChatMessageProps) {
   const { user } = useAuth();
   const isOwnMessage = user?.id === message.user_id;
   const canDelete = user?.is_admin && !message.is_deleted;
