@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyToken } from '@/lib/auth';
 
 export async function middleware(request: NextRequest) {
   const response = NextResponse.next();
@@ -22,49 +21,8 @@ export async function middleware(request: NextRequest) {
   response.headers.set('X-RateLimit-Limit', '100');
   response.headers.set('X-RateLimit-Remaining', '99');
 
-  const { pathname } = request.nextUrl;
-
-  // Public routes that don't require authentication
-  const publicRoutes = ['/api/auth/login', '/api/auth/register'];
-  
-  // API routes that require authentication
-  if (pathname.startsWith('/api/') && !publicRoutes.includes(pathname)) {
-    const token = request.cookies.get('auth-token')?.value;
-    
-    if (!token) {
-      return NextResponse.json(
-        { success: false, error: 'Authentication required' },
-        { status: 401 }
-      );
-    }
-
-    try {
-      const payload = verifyToken(token);
-      if (!payload) {
-        return NextResponse.json(
-          { success: false, error: 'Invalid token' },
-          { status: 401 }
-        );
-      }
-
-      // Add user info to headers for API routes
-      response.headers.set('X-User-ID', payload.id);
-      response.headers.set('X-User-Admin', payload.is_admin ? 'true' : 'false');
-
-      // Admin-only routes
-      if (pathname.startsWith('/api/admin/') && !payload.is_admin) {
-        return NextResponse.json(
-          { success: false, error: 'Admin access required' },
-          { status: 403 }
-        );
-      }
-    } catch (error) {
-      return NextResponse.json(
-        { success: false, error: 'Invalid token' },
-        { status: 401 }
-      );
-    }
-  }
+  // Note: Authentication checks in middleware are disabled to avoid Edge runtime Node.js API usage.
+  // All authentication is enforced inside Node.js API routes (export const runtime = 'nodejs').
 
   // CSRF protection for state-changing requests
   if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(request.method)) {

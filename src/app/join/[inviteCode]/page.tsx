@@ -27,7 +27,7 @@ export default function JoinChatroomPage() {
   const [joining, setJoining] = useState(false);
   const [error, setError] = useState('');
 
-  const inviteCode = params.inviteCode as string;
+  const inviteCode = (params as { inviteCode?: string } | null)?.inviteCode || '';
 
   useEffect(() => {
     if (!inviteCode) {

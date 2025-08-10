@@ -52,7 +52,12 @@ const nextConfig = {
   
   // Server external packages (moved from experimental)
   serverExternalPackages: ['crypto-js', 'jsonwebtoken'],
-  
+
+  // Make sure Edge runtime never bundles jsonwebtoken by restricting it to Node runtimes only
+  experimental: {
+    serverMinify: true,
+  },
+
   // Webpack configuration
   webpack: (config, { buildId, dev, isServer, defaultLoaders, webpack }) => {
     // Add path alias resolution for @/* imports

@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
+export const runtime = 'nodejs';
+
 import { validateSession } from '@/lib/auth';
 
 export async function GET(request: NextRequest) {
   try {
     const token = request.cookies.get('auth-token')?.value;
-    
+
     if (!token) {
       return NextResponse.json({
         success: false,
@@ -13,7 +15,7 @@ export async function GET(request: NextRequest) {
     }
 
     const result = await validateSession(token);
-    
+
     if (result.valid && result.user) {
       return NextResponse.json({
         success: true,
