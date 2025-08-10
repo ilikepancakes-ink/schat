@@ -21,7 +21,8 @@ export default function UserList({
   onUnbanUser,
   onGrantAdmin,
   onRevokeAdmin,
-  onUserClick
+  onUserClick,
+  onUserContextMenu
 }: UserListProps) {
   const { user: currentUser } = useAuth();
   const isAdmin = currentUser?.is_admin;
