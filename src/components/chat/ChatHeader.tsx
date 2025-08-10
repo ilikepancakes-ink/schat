@@ -25,7 +25,10 @@ export default function ChatHeader({
   showChatroomSidebar,
   currentChatroomName,
   onOpenAdminPanel,
-  onOpenPrivacySettings
+  onOpenPrivacySettings,
+  isDM,
+  onStartVoiceCall,
+  onStartVideoCall,
 }: ChatHeaderProps) {
   const { user, logout } = useAuth();
   const [showDropdown, setShowDropdown] = useState(false);
