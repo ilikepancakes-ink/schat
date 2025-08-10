@@ -21,8 +21,24 @@ export default function DMCallOverlay({ socket, chatroomId, mode, role, onClose 
   const localStreamRef = useRef<MediaStream | null>(null);
   const [status, setStatus] = useState<string>(role === "caller" ? "Calling..." : "Incoming...");
 
+  // Track async setup so we can await readiness inside signal handler
+  const setupPromiseRef = useRef<Promise<void> | null>(null);
+  const pendingIceRef = useRef<RTCIceCandidateInit[]>([]);
+
+  const ensurePeerReady = async () => {
+    if (!setupPromiseRef.current) {
+      setupPromiseRef.current = setupPeer();
+    }
+    try {
+      await setupPromiseRef.current;
+    } catch (e) {
+      console.error("Peer setup failed", e);
+    }
+  };
+
   // Start caller flow after callee accepts
   const startCallerOffer = async () => {
+    await ensurePeerReady();
     if (!pcRef.current) return;
     try {
       setStatus("Connecting...");
@@ -90,6 +106,8 @@ export default function DMCallOverlay({ socket, chatroomId, mode, role, onClose 
     pcRef.current = null;
     localStreamRef.current?.getTracks().forEach((t) => t.stop());
     localStreamRef.current = null;
+    setupPromiseRef.current = null;
+    pendingIceRef.current = [];
   };
 
   useEffect(() => {
@@ -107,24 +125,46 @@ export default function DMCallOverlay({ socket, chatroomId, mode, role, onClose 
           break;
         }
         case "offer": {
+          await ensurePeerReady();
           if (!pcRef.current) return;
           setStatus("Connecting...");
-          await pcRef.current.setRemoteDescription(new RTCSessionDescription(payload.sdp));
+          await pcRef.current.setRemoteDescription(payload.sdp);
+          // Add any buffered ICE candidates now that remote description is set
+          if (pendingIceRef.current.length) {
+            for (const c of pendingIceRef.current) {
+              try { await pcRef.current.addIceCandidate(c); } catch {}
+            }
+            pendingIceRef.current = [];
+          }
           const answer = await pcRef.current.createAnswer();
           await pcRef.current.setLocalDescription(answer);
           socket.emit("call:signal", { type: "answer", chatroomId, sdp: answer });
           break;
         }
         case "answer": {
+          await ensurePeerReady();
           if (!pcRef.current) return;
-          await pcRef.current.setRemoteDescription(new RTCSessionDescription(payload.sdp));
+          await pcRef.current.setRemoteDescription(payload.sdp);
+          // Drain any buffered ICE candidates
+          if (pendingIceRef.current.length) {
+            for (const c of pendingIceRef.current) {
+              try { await pcRef.current.addIceCandidate(c); } catch {}
+            }
+            pendingIceRef.current = [];
+          }
           setStatus("Connected");
           break;
         }
         case "ice-candidate": {
+          await ensurePeerReady();
           if (!pcRef.current) return;
           try {
-            await pcRef.current.addIceCandidate(payload.candidate);
+            if (pcRef.current.remoteDescription) {
+              await pcRef.current.addIceCandidate(payload.candidate);
+            } else {
+              // Buffer until remote description is applied
+              pendingIceRef.current.push(payload.candidate);
+            }
           } catch (e) {
             console.warn("ICE add failed", e);
           }
@@ -139,18 +179,19 @@ export default function DMCallOverlay({ socket, chatroomId, mode, role, onClose 
       }
     };
 
-    (async () => {
-      await setupPeer();
-      if (role === "caller") {
-        // Wait for accept; invite already sent by parent
-        setStatus("Ringing...");
-      } else {
-        // Callee: ready to receive offer
-        setStatus("Connecting...");
-      }
-    })();
-
+    // Register listener BEFORE starting async setup to avoid missing early signals
     socket.on("call:signal", onSignal);
+
+    // Kick off local setup
+    setupPromiseRef.current = setupPeer();
+    if (role === "caller") {
+      // Wait for accept; invite already sent by parent
+      setStatus("Ringing...");
+    } else {
+      // Callee: ready to receive offer
+      setStatus("Connecting...");
+    }
+
     return () => {
       mounted = false;
       socket.off("call:signal", onSignal);
