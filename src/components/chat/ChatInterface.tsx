@@ -15,7 +15,10 @@ import PrivacySettings from '../privacy/PrivacySettings';
 import InviteCodeDisplay from './InviteCodeDisplay';
 import { UserProfile as UserProfileType } from '@/types/database';
 import { apiClient } from '@/lib/api-client';
+import { io, Socket } from 'socket.io-client';
+import DMCallOverlay from '../call/DMCallOverlay';
 
+import { MessageCircle, UserPlus } from 'lucide-react';
 export default function ChatInterface() {
   const { user } = useAuth();
   console.log('Current user in ChatInterface:', user);
@@ -38,7 +41,25 @@ export default function ChatInterface() {
   const [showInviteNotifications, setShowInviteNotifications] = useState(false);
   const [showPrivacySettings, setShowPrivacySettings] = useState(false);
   const [currentChatroom, setCurrentChatroom] = useState<any>(null);
+  const [contextMenu, setContextMenu] = useState<{ visible: boolean; x: number; y: number; userId: string; username: string } | null>(null);
+  const [callState, setCallState] = useState<{ open: boolean; mode: 'audio' | 'video' | null; role: 'caller' | 'callee' | null }>({ open: false, mode: null, role: null });
+
+  // Close context menu on click elsewhere or escape
+  useEffect(() => {
+    if (!contextMenu?.visible) return;
+    const handleClick = () => setContextMenu(null);
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setContextMenu(null);
+    };
+    window.addEventListener('click', handleClick);
+    window.addEventListener('keydown', handleEsc);
+    return () => {
+      window.removeEventListener('click', handleClick);
+      window.removeEventListener('keydown', handleEsc);
+    };
+  }, [contextMenu]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const currentRoomRef = useRef<string | null>(null);
 
   // Scroll to bottom of messages
   const scrollToBottom = () => {
@@ -52,14 +73,85 @@ export default function ChatInterface() {
     loadPendingInvites();
   }, [selectedChatroomId]);
 
-  // Real-time polling for new messages and invites
+  // WebSocket connection
+  const socketRef = useRef<Socket | null>(null);
   useEffect(() => {
-    const interval = setInterval(() => {
-      loadMessages();
-      loadPendingInvites();
-    }, 2000); // Poll every 2 seconds
+    // Ensure server socket route is initialized
+    fetch('/api/socket').catch(() => {});
 
-    return () => clearInterval(interval);
+    const socket = io({ path: '/api/socket', withCredentials: true, transports: ['websocket'] });
+    socketRef.current = socket;
+
+    socket.on('connect', () => {
+      // Join current room if selected
+      if (selectedChatroomId) {
+        socket.emit('join_chatroom', selectedChatroomId);
+      }
+    });
+
+    socket.on('new_message', (msg: any) => {
+      // Only add messages for the current chatroom
+      const currentRoom = currentRoomRef.current;
+      if (!currentRoom || msg.chatroom_id !== currentRoom) return;
+      const incoming: ChatMessageType = {
+        id: msg.id,
+        user_id: msg.user_id,
+        username: msg.username,
+        content: msg.content,
+        created_at: msg.created_at,
+        is_admin: !!msg.is_admin,
+        is_deleted: !!msg.is_deleted,
+        attachments: msg.attachments || [],
+      };
+      setMessages((prev: ChatMessageType[]) => [...prev, incoming]);
+    });
+
+    // Handle call invites
+    const onCallSignal = (payload: any) => {
+      const currentRoom = currentRoomRef.current;
+      if (!currentRoom || payload.chatroomId !== currentRoom) return;
+      if (payload.type === 'invite') {
+        // Don't auto-handle if we're already in a call
+        if (callState.open) return;
+        const accept = window.confirm(`${payload.mode === 'video' ? 'Video' : 'Voice'} call from ${payload.fromUserId ? 'user' : ''}. Accept?`);
+        if (accept) {
+          setCallState({ open: true, mode: payload.mode, role: 'callee' });
+          socket.emit('call:signal', { type: 'accept', chatroomId: payload.chatroomId });
+        } else {
+          socket.emit('call:signal', { type: 'end', chatroomId: payload.chatroomId });
+        }
+      }
+    };
+    socket.on('call:signal', onCallSignal);
+
+    socket.on('user_joined', () => {});
+    socket.on('user_left', () => {});
+
+    return () => {
+      socket.off('call:signal', onCallSignal);
+      socket.disconnect();
+      socketRef.current = null;
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+
+  useEffect(() => {
+    const socket = socketRef.current;
+    if (!socket) return;
+    if (selectedChatroomId) {
+      currentRoomRef.current = selectedChatroomId;
+      socket.emit('join_chatroom', selectedChatroomId);
+      // Load initial messages for the room once
+      loadMessages();
+    } else {
+      currentRoomRef.current = null;
+    }
+    return () => {
+      if (socket && selectedChatroomId) {
+        socket.emit('leave_chatroom', selectedChatroomId);
+      }
+    };
   }, [selectedChatroomId]);
 
   // Scroll to bottom when messages change
@@ -159,7 +251,7 @@ export default function ChatInterface() {
         const data = await response.json();
         if (data.success) {
           // Remove the invite from pending list
-          setPendingInvites(prev => prev.filter(invite => invite.id !== inviteId));
+          setPendingInvites((prev: ChatroomInvite[]) => prev.filter((invite: ChatroomInvite) => invite.id !== inviteId));
 
           // If accepted, refresh chatrooms
           if (action === 'accept') {
@@ -186,11 +278,10 @@ export default function ChatInterface() {
 
       if (response.ok) {
         const data = await response.json();
-        if (data.success && data.message) {
-          setMessages(prev => [...prev, data.message]);
-        } else {
-          throw new Error(data.error || 'Failed to send message');
+        if (!(data && data.success)) {
+          throw new Error(data?.error || 'Failed to send message');
         }
+        // Do not append to messages here; server broadcasts via WebSocket
       } else {
         throw new Error('Failed to send message');
       }
@@ -202,7 +293,7 @@ export default function ChatInterface() {
 
   const deleteMessage = async (messageId: string) => {
     if (!user?.is_admin) return;
-    
+
     const reason = prompt('Enter reason for deleting this message:');
     if (reason === null) return;
 
@@ -219,9 +310,9 @@ export default function ChatInterface() {
         const data = await response.json();
         if (data.success) {
           // Mark message as deleted in local state
-          setMessages(prev => 
-            prev.map(msg => 
-              msg.id === messageId 
+          setMessages((prev: ChatMessageType[]) =>
+            prev.map((msg: ChatMessageType) =>
+              msg.id === messageId
                 ? { ...msg, is_deleted: true, content: '[Message deleted]' }
                 : msg
             )
@@ -456,7 +547,7 @@ export default function ChatInterface() {
         const data = await response.json();
         if (data.success) {
           // Update the selected profile with new data
-          setSelectedProfile(prev => prev ? { ...prev, ...updates } : null);
+          setSelectedProfile((prev: UserProfileType | null) => prev ? { ...prev, ...updates } as UserProfileType : null);
         }
       }
     } catch (error) {
@@ -501,34 +592,48 @@ export default function ChatInterface() {
     if (!selectedChatroomId || selectedChatroomId === null) {
       return 'Welcome to Schat';
     }
-    // We could fetch chatroom details here, but for now just show the ID
+    // Prefer loaded chatroom name
+    if (currentChatroom?.name) return currentChatroom.name;
     return `Chatroom ${selectedChatroomId.slice(0, 8)}...`;
+  };
+
+  const isCurrentDM = !!currentChatroom?.name && currentChatroom.name.startsWith('DM:');
+
+  const handleStartCall = (mode: 'audio' | 'video') => {
+    if (!selectedChatroomId || !socketRef.current) return;
+    // Open overlay as caller and send invite
+    setCallState({ open: true, mode, role: 'caller' });
+    socketRef.current.emit('call:signal', { type: 'invite', chatroomId: selectedChatroomId, mode });
   };
 
   if (loading) {
     return (
-      <div className="h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading chat...</p>
+      <React.Fragment>
+        <div className="h-screen flex items-center justify-center bg-gray-50">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Loading chat...</p>
+          </div>
         </div>
-      </div>
+      </React.Fragment>
     );
   }
 
   if (error) {
     return (
-      <div className="h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <p className="text-red-600 mb-4">{error}</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-          >
-            Retry
-          </button>
+      <React.Fragment>
+        <div className="h-screen flex items-center justify-center bg-gray-50">
+          <div className="text-center">
+            <p className="text-red-600 mb-4">{error}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+            >
+              Retry
+            </button>
+          </div>
         </div>
-      </div>
+      </React.Fragment>
     );
   }
 
@@ -543,6 +648,9 @@ export default function ChatInterface() {
         currentChatroomName={getCurrentChatroomName()}
         onOpenAdminPanel={() => setShowAdminPanel(true)}
         onOpenPrivacySettings={() => setShowPrivacySettings(true)}
+        isDM={isCurrentDM}
+        onStartVoiceCall={() => handleStartCall('audio')}
+        onStartVideoCall={() => handleStartCall('video')}
       />
 
       {/* Main content */}
@@ -610,6 +718,9 @@ export default function ChatInterface() {
                   message={message}
                   onDeleteMessage={user?.is_admin ? deleteMessage : undefined}
                   onUserClick={handleUserClick}
+                  onUserContextMenu={(uid, uname, e) => {
+                    setContextMenu({ visible: true, x: e.clientX, y: e.clientY, userId: uid, username: uname });
+                  }}
                 />
               ))
             )}
@@ -621,6 +732,8 @@ export default function ChatInterface() {
             <MessageInput
               onSendMessage={sendMessage}
               onCommand={handleCommand}
+
+
               currentChatroomId={selectedChatroomId || undefined}
               disabled={user?.is_banned}
             />
@@ -636,6 +749,9 @@ export default function ChatInterface() {
             onGrantAdmin={(userId, username) => handleUserAction('grant_admin', userId, username)}
             onRevokeAdmin={(userId, username) => handleUserAction('revoke_admin', userId, username)}
             onUserClick={handleUserClick}
+            onUserContextMenu={(uid, uname, e) => {
+              setContextMenu({ visible: true, x: e.clientX, y: e.clientY, userId: uid, username: uname });
+            }}
           />
         )}
       </div>
@@ -679,6 +795,35 @@ export default function ChatInterface() {
           </div>
         </div>
       )}
+
+      {/* Username context menu */}
+      {contextMenu?.visible && (
+        <div
+          className="fixed z-50 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg py-1 text-sm"
+          style={{ left: contextMenu.x, top: contextMenu.y }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button
+            className="w-full text-left px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
+            onClick={() => {
+              handleSendMessage(contextMenu.userId);
+              setContextMenu(null);
+            }}
+          >
+            <MessageCircle size={16} className="mr-2" /> Direct Message {contextMenu.username}
+          </button>
+          <button
+            className="w-full text-left px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
+            onClick={() => {
+              handleAddFriend(contextMenu.userId);
+              setContextMenu(null);
+            }}
+          >
+            <UserPlus size={16} className="mr-2" /> Add {contextMenu.username} as Friend
+          </button>
+        </div>
+      )}
+
 
       {/* Debug info */}
       {selectedProfile && (
@@ -773,6 +918,17 @@ export default function ChatInterface() {
         />
       )}
 
+      {/* DM Call Overlay */}
+      {callState.open && callState.mode && callState.role && selectedChatroomId && socketRef.current && (
+        <DMCallOverlay
+          socket={socketRef.current}
+          chatroomId={selectedChatroomId}
+          mode={callState.mode}
+          role={callState.role}
+          onClose={() => setCallState({ open: false, mode: null, role: null })}
+        />
+      )}
+
       {/* Invite Notifications */}
       {showInviteNotifications && pendingInvites.length > 0 && (
         <InviteNotifications
@@ -784,4 +940,3 @@ export default function ChatInterface() {
     </div>
   );
 }
- 

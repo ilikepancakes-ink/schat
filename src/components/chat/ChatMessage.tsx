@@ -11,6 +11,7 @@ interface ChatMessageProps {
   message: ChatMessageType;
   onDeleteMessage?: (messageId: string) => void;
   onUserClick?: (userId: string) => void;
+  onUserContextMenu?: (userId: string, username: string, event: React.MouseEvent) => void;
 }
 
 export default function ChatMessage({ message, onDeleteMessage, onUserClick }: ChatMessageProps) {
@@ -72,6 +73,10 @@ export default function ChatMessage({ message, onDeleteMessage, onUserClick }: C
               onClick={() => {
                 console.log('Username clicked:', message.username, 'User ID:', message.user_id);
                 onUserClick?.(message.user_id);
+              }}
+              onContextMenu={(e) => {
+                e.preventDefault();
+                onUserContextMenu?.(message.user_id, message.username, e);
               }}
               className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer"
             >

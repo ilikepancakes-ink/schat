@@ -12,6 +12,7 @@ interface UserListProps {
   onGrantAdmin?: (userId: string, username: string) => void;
   onRevokeAdmin?: (userId: string, username: string) => void;
   onUserClick?: (userId: string) => void;
+  onUserContextMenu?: (userId: string, username: string, event: React.MouseEvent) => void;
 }
 
 export default function UserList({
@@ -92,6 +93,10 @@ export default function UserList({
                     console.log('👤 User ID length:', user.id?.length);
                     console.log('👤 onUserClick function exists:', !!onUserClick);
                     onUserClick?.(user.id);
+                  }}
+                  onContextMenu={(e) => {
+                    e.preventDefault();
+                    onUserContextMenu?.(user.id, user.username, e);
                   }}
                   className={`text-sm font-medium truncate hover:underline cursor-pointer text-left transition-colors duration-200 ${
                     user.is_banned ? 'text-red-500 line-through' : 'text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400'

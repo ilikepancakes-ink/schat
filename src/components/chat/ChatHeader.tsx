@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { MessageCircle, LogOut, Settings, Shield, Users, Hash, Menu, Lock } from 'lucide-react';
+import { MessageCircle, LogOut, Settings, Shield, Users, Hash, Menu, Lock, Phone, Video } from 'lucide-react';
 import ThemeToggle from '@/components/ui/ThemeToggle';
 
 interface ChatHeaderProps {
@@ -13,6 +13,9 @@ interface ChatHeaderProps {
   currentChatroomName: string;
   onOpenAdminPanel?: () => void;
   onOpenPrivacySettings?: () => void;
+  isDM?: boolean;
+  onStartVoiceCall?: () => void;
+  onStartVideoCall?: () => void;
 }
 
 export default function ChatHeader({
@@ -91,6 +94,26 @@ export default function ChatHeader({
           >
             <Users size={20} />
           </button>
+
+          {/* DM call buttons */}
+          {isDM && (
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={onStartVoiceCall}
+                className="p-2 rounded-lg text-green-600 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900 transition-colors"
+                title="Start voice call"
+              >
+                <Phone size={18} />
+              </button>
+              <button
+                onClick={onStartVideoCall}
+                className="p-2 rounded-lg text-purple-600 dark:text-purple-400 hover:bg-purple-100 dark:hover:bg-purple-900 transition-colors"
+                title="Start video call"
+              >
+                <Video size={18} />
+              </button>
+            </div>
+          )}
 
           {/* Admin panel button */}
           {user?.is_admin && (

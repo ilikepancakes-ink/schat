@@ -272,6 +272,21 @@ export async function POST(
       is_admin: authResult.user.is_admin,
     };
 
+    // Emit to chatroom via Socket.IO
+    try {
+      const { getIO } = await import('@/lib/socket-io');
+      const io = getIO();
+      if (io) {
+        const room = `chatroom:${chatroomId}`;
+        io.to(room).emit('new_message', {
+          ...messageWithUser,
+          chatroom_id: chatroomId,
+        });
+      }
+    } catch (e) {
+      console.warn('Socket emit failed (non-fatal):', e);
+    }
+
     return NextResponse.json({
       success: true,
       message: messageWithUser,
